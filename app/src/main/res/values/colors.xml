@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#6200EE</color>
+    <color name="colorPrimaryDark">#3700B3</color>
+    <color name="colorAccent">#03DAC5</color>
+    <color name="colorBGp1">#2D4E96</color>
+    <color name="colorBTp1">#707070</color>
+    <color name="colorBTtext">#3B3240</color>
+    <color name="colorBTextGreen">#15C71B</color>
+    <color name="colorBTextRed">#FF0008</color>
+    <color name="colorTVwhite">#FFFFFF</color>
+</resources>

@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">runnerApp</string>
+    <string name="button">Previous tracks</string>
+    <string name="button2">Record track</string>
+    <string name="button3">Start</string>
+    <string name="button4">Stop</string>
+    <string name="header">Record track</string>
+    <string name="timervalue">00:00:00</string>
+    <string name="distance">Distance ran:</string>
+    <string name="avgspeed">Average speed:</string>
+    <string name="distancevalue">1.45 km</string>
+    <string name="avgspeedvalue">5.1 km/h</string>
+    <string name="headernaming">Please provide a name for your track</string>
+    <string name="length">Length:</string>
+    <string name="time">Time:</string>
+    <string name="lengthvalue">5.51 km</string>
+    <string name="timevalue">00:16:57</string>
+    <string name="nameholder">Name your track</string>
+    <string name="cancelbtn">Cancel</string>
+    <string name="savebtn">Save track</string>
+    <string name="recyclerheader">Your tracks</string>
+</resources>
