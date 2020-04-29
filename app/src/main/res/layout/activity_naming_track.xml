@@ -8,7 +8,7 @@
     tools:context=".NamingTrack">
 
     <EditText
-        android:id="@+id/editText"
+        android:id="@+id/trackName"
         android:layout_width="wrap_content"
         android:layout_height="80dp"
         android:ems="10"
@@ -43,7 +43,7 @@
         android:textSize="18sp"
         app:layout_constraintEnd_toStartOf="@+id/textView4"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editText" />
+        app:layout_constraintTop_toBottomOf="@+id/trackName" />
 
     <TextView
         android:id="@+id/textView4"
@@ -57,7 +57,7 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <TextView
-        android:id="@+id/textView5"
+        android:id="@+id/timeValue"
         android:layout_width="124dp"
         android:layout_height="50dp"
         android:layout_marginEnd="60dp"
@@ -76,8 +76,9 @@
         android:textAlignment="viewStart"
         android:textColor="@color/colorTVwhite"
         android:textSize="18sp"
-        app:layout_constraintBaseline_toBaselineOf="@+id/textView5"
-        app:layout_constraintEnd_toStartOf="@+id/textView5"
+        app:layout_constraintBaseline_toBaselineOf="@+id/timeValue"
+        app:layout_constraintEnd_toStartOf="@+id/timeValue"
+        app:layout_constraintHorizontal_bias="0.48"
         app:layout_constraintStart_toStartOf="parent" />
 
     <Button

@@ -11,6 +11,7 @@
         android:id="@+id/imageView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginBottom="90dp"
         android:background="@color/colorBGp1"
         android:contentDescription="Runningman"
         android:scaleType="fitXY"
@@ -27,17 +28,17 @@
         android:layout_height="60dp"
         android:layout_marginStart="20dp"
         android:layout_marginEnd="20dp"
-        android:layout_marginBottom="14dp"
         android:background="@layout/roundedcorners"
         android:text="@string/button2"
         android:textColor="@android:color/background_light"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/button2"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintEnd_toStartOf="@+id/previousTracks"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView" />
 
     <Button
-        android:id="@+id/button2"
+        android:id="@+id/previousTracks"
         android:layout_width="170dp"
         android:layout_height="60dp"
         android:layout_marginEnd="20dp"
