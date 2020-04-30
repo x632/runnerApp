@@ -41,24 +41,8 @@ class Tracks : AppCompatActivity(), CoroutineScope {
         val name = intent.getStringExtra("name")
         val timestr = makeTimeStr(timeUnit)
 
-        if (timeUnit >= 0) { createdTrack = true}
+        if (timeUnit >= 0) { createdTrack = true} // = om man inte har kommit hit direkt från startskärmen
 
-        if (createdTrack) {
-            val a = Map(0, name, 5.5, timestr)
-            saveMap(a)
-        }
-           launch(Dispatchers.IO) {
-
-                val maps = loadAllMaps()
-                maps.await().forEach { map ->
-                        Datamanager.maps.add(map)
-
-                    println("!!! Namn: ${map.name} ID: ${map.id}  Längd: ${map.length} Tid: ${map.time}")
-                }
-               // vill ha in en uppdaterare av recyclerviewn här
-            }
-
-      sleep(500)
         recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
 
         recyclerView.layoutManager = LinearLayoutManager(this)
@@ -69,6 +53,23 @@ class Tracks : AppCompatActivity(), CoroutineScope {
         //koppla ihop vår adapter med recyclerview:n
         recyclerView.adapter = adapter
 
+        if (createdTrack) {
+            val a = Map(0, name!!, 5.5, timestr)
+            saveMap(a)
+        }
+           launch(Dispatchers.Main) {
+
+                val maps = loadAllMaps()
+                maps.await().forEach { map ->
+                        Datamanager.maps.add(map)
+                    println("!!! Namn: ${map.name} ID: ${map.id}  Längd: ${map.length} Tid: ${map.time}")
+
+                }
+                adapter.notifyDataSetChanged()
+            }
+
+
+
     }
     override fun onResume(){
         super.onResume()
@@ -78,7 +79,7 @@ class Tracks : AppCompatActivity(), CoroutineScope {
         async(Dispatchers.IO) {   db.mapDao().insert(map) }
     }
     fun deleteMap(map: Map) {
-        async(Dispatchers.IO) {   db.mapDao().delete(map) }
+        async(Dispatchers.IO) {  db.mapDao().delete(map) }
     }
     fun loadAllMaps() : Deferred<List<Map>> =
         async(Dispatchers.IO) {

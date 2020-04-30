@@ -37,7 +37,7 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
     }
     fun removeTrack(position : Int) {
         Datamanager.maps.removeAt(position)
-        notifyDataSetChanged()
+        notifyDataSetChanged()  //hitta databasen och
         // vill här på ngt sätt få in att den uppdaterar room också - skapa databas i denna klassen också?
     }
 

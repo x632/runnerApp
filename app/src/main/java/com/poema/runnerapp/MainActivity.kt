@@ -14,7 +14,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val button = findViewById<Button>(R.id.button)
+
         val prevTracksButton = findViewById<Button>(R.id.previousTracks)
+
         button.setOnClickListener {
             val intent = Intent(this, RecordTrack::class.java)
             startActivity(intent)
@@ -23,7 +25,6 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, Tracks::class.java)
             startActivity(intent)
         }
-
 
     }
 }
