@@ -10,12 +10,12 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class NamingTrack : AppCompatActivity() {
 
-
+    var uid = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_naming_track)
-
+        uid = intent.getStringExtra("fromRecordToNaming")
         val timeUnit = intent.getIntExtra("Time",0 )
         val resultTimeText = makeTimeStr(timeUnit)
         val saveButton = findViewById<Button>(R.id.save)
@@ -27,6 +27,7 @@ class NamingTrack : AppCompatActivity() {
             val trackName = getName()
             intent.putExtra("name", trackName)
             intent.putExtra("time", timeUnit)
+            intent.putExtra("fromNamingToTracks", uid)
             startActivity(intent)
         }
     }
@@ -43,7 +44,4 @@ class NamingTrack : AppCompatActivity() {
         val resultText = "%1$02d:%2$02d:%3$02d".format(hours, minutes, seconds)
         return resultText
     }
-
-
-
 }

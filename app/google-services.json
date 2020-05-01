@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "979307719596",
+    "firebase_url": "https://runnerapp-76e44.firebaseio.com",
+    "project_id": "runnerapp-76e44",
+    "storage_bucket": "runnerapp-76e44.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:979307719596:android:c6f971d0605ce5d8fc6809",
+        "android_client_info": {
+          "package_name": "com.poema.runnerapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "979307719596-ohsbg2daco2skpf3mgegur9hdpdq4phn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.poema.runnerapp",
+            "certificate_hash": "5c14864f40d904f6fe2a23b51fdc725de7fc6c93"
+          }
+        },
+        {
+          "client_id": "979307719596-njujpbht9q8nkhr2t0krn9404hai09e2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBvIAsizZ9zv-1RJ_pZ-x_u5sQjkaDAT5A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "979307719596-njujpbht9q8nkhr2t0krn9404hai09e2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

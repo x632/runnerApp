@@ -11,9 +11,14 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class MapRecycleAdapter (private val context : Context, private val maps: List<Map>): RecyclerView.Adapter<MapRecycleAdapter.ViewHolder>() {
     //inflator behövs för att skapa en view utifrån en layout (xml)
+
+    lateinit var db: FirebaseFirestore
+    private var auth: FirebaseAuth? = null
     private val layoutInflater = LayoutInflater.from(context)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -33,11 +38,15 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
         holder.textViewName.text = "Name: " + map.name
         holder.textViewLength.text = "Length: " + map.length.toString() + "km"
         holder.textViewTime.text = "Time: " + map.time
+        holder.textViewId.text = "ID: " + map.id
         holder.mapPosition = position
     }
     fun removeTrack(position : Int) {
         Datamanager.maps.removeAt(position)
-        notifyDataSetChanged()  //hitta databasen och
+        notifyDataSetChanged()
+
+
+        //hitta databasen och
         // vill här på ngt sätt få in att den uppdaterar room också - skapa databas i denna klassen också?
     }
 
@@ -46,6 +55,7 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
         val textViewName = itemView.findViewById<TextView>(R.id.textName)
         val textViewLength = itemView.findViewById<TextView>(R.id.textLength)
         val textViewTime = itemView.findViewById<TextView>(R.id.textTime)
+        val textViewId = itemView.findViewById<TextView>(R.id.textId)
         val delButton =  itemView.findViewById<ImageView>(R.id.deleteImage)
         var mapPosition = 0
 

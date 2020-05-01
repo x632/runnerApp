@@ -1,29 +1,34 @@
 package com.poema.runnerapp
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.firestore.FirebaseFirestore
 import java.util.*
 import kotlin.concurrent.timer
+
 
 class RecordTrack : AppCompatActivity() {
 
     var timerStarted = false
     var timerOn : Timer? = null
     var timeUnit = -1
-
+    var uid : String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_record_track)
+        uid = intent.getStringExtra("fromStartPageToRecord")
+
         val stopButton = findViewById<Button>(R.id.stopbutton)
         stopButton.setOnClickListener {
             if (timerOn != null) {
                 startTimer(false)
                 val intent = Intent(this, NamingTrack::class.java)
                 intent.putExtra("Time",timeUnit)
+                intent.putExtra("fromRecordToNaming",uid)
                 startActivity(intent)
             }
         }

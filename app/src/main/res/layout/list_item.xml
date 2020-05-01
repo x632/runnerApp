@@ -7,7 +7,7 @@
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         app:cardBackgroundColor="@color/colorBTtext"
         app:cardCornerRadius="8dp"
         app:cardElevation="3dp"
@@ -37,13 +37,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="5dp"
                 android:layout_marginTop="5dp"
-                android:layout_marginBottom="5dp"
                 android:text="TextView"
                 android:textColor="@color/colorBTextGreen"
-                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textName"
-                app:layout_constraintVertical_bias="0.0" />
+                app:layout_constraintTop_toBottomOf="@+id/textName" />
 
             <TextView
                 android:id="@+id/textTime"
@@ -56,7 +53,7 @@
                 android:textColor="@color/colorBTextGreen"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textLength" />
+                app:layout_constraintTop_toBottomOf="@+id/textId" />
 
             <ImageView
                 android:id="@+id/deleteImage"
@@ -67,6 +64,17 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@android:drawable/ic_delete" />
+
+            <TextView
+                android:id="@+id/textId"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_marginTop="5dp"
+                android:text="TextView"
+                android:textColor="@color/colorBTextGreen"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/textLength" />
 
 
         </androidx.constraintlayout.widget.ConstraintLayout>
