@@ -15,12 +15,12 @@ class RecordTrack : AppCompatActivity() {
     var timerStarted = false
     var timerOn : Timer? = null
     var timeUnit = -1
-    var uid : String = ""
+    var myUserUid : String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_record_track)
-        uid = intent.getStringExtra("fromStartPageToRecord")
+        myUserUid = intent.getStringExtra("fromStartPageToRecord")
 
         val stopButton = findViewById<Button>(R.id.stopbutton)
         stopButton.setOnClickListener {
@@ -28,7 +28,7 @@ class RecordTrack : AppCompatActivity() {
                 startTimer(false)
                 val intent = Intent(this, NamingTrack::class.java)
                 intent.putExtra("Time",timeUnit)
-                intent.putExtra("fromRecordToNaming",uid)
+                intent.putExtra("fromRecordToNaming",myUserUid)
                 startActivity(intent)
             }
         }

@@ -20,15 +20,13 @@ class Tracks : AppCompatActivity() {
     var createdTrack: Boolean = false
     var adapter: MapRecycleAdapter? = null
     var docUid = ""
-    var uid = ""
+    var myUserUid = ""
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_tracks)
 
         db = FirebaseFirestore.getInstance()
-        auth = FirebaseAuth.getInstance();
-        uid = intent.getStringExtra("fromNamingToTracks")
-       // uid = intent.getStringExtra("fromStartPage")
+        auth = FirebaseAuth.getInstance()
 
         val timeUnit = intent.getIntExtra("time", -1)
         val name = intent.getStringExtra("name")
@@ -37,11 +35,17 @@ class Tracks : AppCompatActivity() {
         if(timeUnit >= 0){
             createdTrack = true
         }
+        if (!createdTrack){
+            myUserUid = intent.getStringExtra("fromStartPage")!!
+            }
+        if (createdTrack) {
+            myUserUid = intent.getStringExtra("fromNamingToTracks")!!
+        }
         recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
 
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        adapter = MapRecycleAdapter(this, Datamanager.maps)
+        adapter = MapRecycleAdapter(this, Datamanager.maps, myUserUid)
 
         //koppla ihop vår adapter med recyclerview:n
         recyclerView.adapter = adapter
@@ -49,7 +53,7 @@ class Tracks : AppCompatActivity() {
         if (createdTrack){
             val a = Map("", name, 5.5, timestr)
 
-            db.collection("users").document(uid).collection("maps").add(a)
+            db.collection("users").document(myUserUid).collection("maps").add(a)
                 .addOnSuccessListener {uid->
                     docUid = uid.id
                     getData(docUid)
@@ -60,13 +64,9 @@ class Tracks : AppCompatActivity() {
 
         }
 
-
         if(!createdTrack) {
         getDataWithoutAdding()
         }
-
-
-
     }
 
 
@@ -78,25 +78,26 @@ class Tracks : AppCompatActivity() {
         return resultText
     }
     fun getData(docID: String){
-        val docRef = db.collection("users").document(uid).collection("maps")
+        val docRef = db.collection("users").document(myUserUid).collection("maps")
         docRef.get().addOnSuccessListener { documentSnapshot ->
             for (document in documentSnapshot.documents) {
                 val newMap = document.toObject(Map::class.java)
                 if (newMap != null) {
                     newMap.id = docID
-                    Datamanager.maps.add(newMap!!)
+                    Datamanager.maps.add(newMap)
                 }
                 adapter!!.notifyDataSetChanged()
             }
         }
     }
     fun getDataWithoutAdding(){
-        val docRef = db.collection("users").document(uid).collection("maps")
+        val docRef = db.collection("users").document(myUserUid).collection("maps")
         docRef.get().addOnSuccessListener { documentSnapshot ->
             for (document in documentSnapshot.documents) {
                 val newMap = document.toObject(Map::class.java)
                 if (newMap != null) {
-                    Datamanager.maps.add(newMap!!)
+                    newMap.id = ("$document.id")
+                    Datamanager.maps.add(newMap)
                 }
                 adapter!!.notifyDataSetChanged()
             }

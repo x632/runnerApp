@@ -1,8 +1,10 @@
 package com.poema.runnerapp
 
 import android.app.AlertDialog
+import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.DialogInterface
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,15 +16,22 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
-class MapRecycleAdapter (private val context : Context, private val maps: List<Map>): RecyclerView.Adapter<MapRecycleAdapter.ViewHolder>() {
+class MapRecycleAdapter (private val context : Context, private val maps: List<Map>, private val myUserUid: String): RecyclerView.Adapter<MapRecycleAdapter.ViewHolder>() {
     //inflator behövs för att skapa en view utifrån en layout (xml)
 
     lateinit var db: FirebaseFirestore
     private var auth: FirebaseAuth? = null
     private val layoutInflater = LayoutInflater.from(context)
+    var loggedIn = false
+    var myUserId = ""
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-
+        db = FirebaseFirestore.getInstance()
+        auth = FirebaseAuth.getInstance()
+        if (auth!!.currentUser != null)
+        {loggedIn = true
+        myUserId = auth!!.currentUser!!.uid
+        }
         //använder vår inflator för att skapa en view
         val itemView = layoutInflater.inflate(R.layout.list_item, parent, false )
         // skapar vi en viewHolder av vår egna klass ViewHolder (skriven längre ner här)
@@ -38,16 +47,28 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
         holder.textViewName.text = "Name: " + map.name
         holder.textViewLength.text = "Length: " + map.length.toString() + "km"
         holder.textViewTime.text = "Time: " + map.time
-        holder.textViewId.text = "ID: " + map.id
+        //holder.textViewId.text = "ID: " + map.id
         holder.mapPosition = position
     }
     fun removeTrack(position : Int) {
+        val a= Datamanager.maps[position]
+        val b = ("${a.id}")
         Datamanager.maps.removeAt(position)
+        println("!!!  ID : "+b+" och userID: "+myUserUid)
+       db.collection("users").document(myUserUid).collection("maps").document(b).delete()
+            .addOnSuccessListener {
+                Log.d(TAG, "!!! DocumentSnapshot successfully deleted!")
+                onDeleteCompletion()
+            }
+            .addOnFailureListener {
+                    e -> Log.w(TAG, "!!! Error deleting document", e)
+            }
+
+
+
+    }
+    fun onDeleteCompletion(){
         notifyDataSetChanged()
-
-
-        //hitta databasen och
-        // vill här på ngt sätt få in att den uppdaterar room också - skapa databas i denna klassen också?
     }
 
     inner class ViewHolder(itemView : View) : RecyclerView.ViewHolder(itemView) {
@@ -55,7 +76,7 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
         val textViewName = itemView.findViewById<TextView>(R.id.textName)
         val textViewLength = itemView.findViewById<TextView>(R.id.textLength)
         val textViewTime = itemView.findViewById<TextView>(R.id.textTime)
-        val textViewId = itemView.findViewById<TextView>(R.id.textId)
+        //val textViewId = itemView.findViewById<TextView>(R.id.textId)
         val delButton =  itemView.findViewById<ImageView>(R.id.deleteImage)
         var mapPosition = 0
 

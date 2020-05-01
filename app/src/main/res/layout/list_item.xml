@@ -53,7 +53,7 @@
                 android:textColor="@color/colorBTextGreen"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textId" />
+                app:layout_constraintTop_toBottomOf="@+id/textLength" />
 
             <ImageView
                 android:id="@+id/deleteImage"
@@ -64,17 +64,6 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@android:drawable/ic_delete" />
-
-            <TextView
-                android:id="@+id/textId"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
-                android:layout_marginTop="5dp"
-                android:text="TextView"
-                android:textColor="@color/colorBTextGreen"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textLength" />
 
 
         </androidx.constraintlayout.widget.ConstraintLayout>

@@ -18,8 +18,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var textEmail : EditText
     lateinit var textPassword : EditText
     lateinit var auth : FirebaseAuth
-    var myUser : FirebaseUser? = null
-    var uid : String? = null
+    var myUserUid : String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,7 +43,7 @@ class MainActivity : AppCompatActivity() {
             if (task.isSuccessful){
                 println("!!! User Created")
                 if (auth.currentUser != null) {
-                    uid = auth.currentUser!!.uid
+                    myUserUid = auth.currentUser!!.uid
                 }
             } else {
                 println("!!! User not created")
@@ -65,9 +64,9 @@ class MainActivity : AppCompatActivity() {
     fun goIn(){
         val intent = Intent(this,StartPageActivity::class.java)
         if (auth.currentUser != null) {
-            uid = auth.currentUser!!.uid
+            myUserUid = auth.currentUser!!.uid
         }
-        intent.putExtra("fromLoginPage",uid)
+        intent.putExtra("fromLoginPage",myUserUid)
         startActivity(intent)
     }
 }
