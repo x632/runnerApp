@@ -24,13 +24,14 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
     private val layoutInflater = LayoutInflater.from(context)
     var loggedIn = false
     var myUserId = ""
+    var b = ""
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
-        if (auth!!.currentUser != null)
-        {loggedIn = true
-        myUserId = auth!!.currentUser!!.uid
+        if (auth !=null) {
+            loggedIn = true
+            myUserId = auth!!.currentUser!!.uid
         }
         //använder vår inflator för att skapa en view
         val itemView = layoutInflater.inflate(R.layout.list_item, parent, false )
@@ -47,17 +48,19 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
         holder.textViewName.text = "Name: " + map.name
         holder.textViewLength.text = "Length: " + map.length.toString() + "km"
         holder.textViewTime.text = "Time: " + map.time
-        //holder.textViewId.text = "ID: " + map.id
+        holder.textViewId.text = "ID: " + map.id
         holder.mapPosition = position
     }
     fun removeTrack(position : Int) {
         val a= Datamanager.maps[position]
-        val b = ("${a.id}")
+        if (a.id != null) {
+            b = (a.id!!)
+        }
         Datamanager.maps.removeAt(position)
-        println("!!!  ID : "+b+" och userID: "+myUserUid)
+        println("!!!  ID : "+ b +" och userID: "+myUserUid)
        db.collection("users").document(myUserUid).collection("maps").document(b).delete()
             .addOnSuccessListener {
-                Log.d(TAG, "!!! DocumentSnapshot successfully deleted!")
+                Log.d(TAG, "!!! Document successfully deleted!")
                 onDeleteCompletion()
             }
             .addOnFailureListener {
@@ -76,7 +79,7 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
         val textViewName = itemView.findViewById<TextView>(R.id.textName)
         val textViewLength = itemView.findViewById<TextView>(R.id.textLength)
         val textViewTime = itemView.findViewById<TextView>(R.id.textTime)
-        //val textViewId = itemView.findViewById<TextView>(R.id.textId)
+        val textViewId = itemView.findViewById<TextView>(R.id.textId)
         val delButton =  itemView.findViewById<ImageView>(R.id.deleteImage)
         var mapPosition = 0
 

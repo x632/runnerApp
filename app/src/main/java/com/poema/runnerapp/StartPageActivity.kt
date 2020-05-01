@@ -15,15 +15,12 @@ class StartPageActivity : AppCompatActivity() {
         val button = findViewById<Button>(R.id.button)
 
         val prevTracksButton = findViewById<Button>(R.id.loginButton)
-        val myUserUid = intent.getStringExtra("fromLoginPage")
         button.setOnClickListener {
             val intent = Intent(this, RecordTrack::class.java)
-            intent.putExtra("fromStartPageToRecord",myUserUid)
             startActivity(intent)
         }
         prevTracksButton.setOnClickListener {
             val intent = Intent(this, Tracks::class.java)
-            intent.putExtra("fromStartPage",myUserUid)
             startActivity(intent)
         }
 

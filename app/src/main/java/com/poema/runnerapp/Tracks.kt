@@ -21,13 +21,16 @@ class Tracks : AppCompatActivity() {
     var adapter: MapRecycleAdapter? = null
     var docUid = ""
     var myUserUid = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_tracks)
 
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
-
+        if (auth!!.currentUser != null) {
+            myUserUid = auth!!.currentUser!!.uid
+        }
         val timeUnit = intent.getIntExtra("time", -1)
         val name = intent.getStringExtra("name")
         val timestr = makeTimeStr(timeUnit)
@@ -35,12 +38,12 @@ class Tracks : AppCompatActivity() {
         if(timeUnit >= 0){
             createdTrack = true
         }
-        if (!createdTrack){
-            myUserUid = intent.getStringExtra("fromStartPage")!!
-            }
-        if (createdTrack) {
-            myUserUid = intent.getStringExtra("fromNamingToTracks")!!
-        }
+        //if (!createdTrack){
+        //    myUserUid = intent.getStringExtra("fromStartPage")!!
+        //    }
+       // if (createdTrack) {
+       //     myUserUid = intent.getStringExtra("fromNamingToTracks")!!
+      //}
         recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
 
         recyclerView.layoutManager = LinearLayoutManager(this)
@@ -56,7 +59,7 @@ class Tracks : AppCompatActivity() {
             db.collection("users").document(myUserUid).collection("maps").add(a)
                 .addOnSuccessListener {uid->
                     docUid = uid.id
-                    getData(docUid)
+                    getData()
                 }
                 .addOnFailureListener {
                     println("!!!Dokumentet sparades INTE!")
@@ -77,13 +80,13 @@ class Tracks : AppCompatActivity() {
         val resultText = "%1$02d:%2$02d:%3$02d".format(hours, minutes, seconds)
         return resultText
     }
-    fun getData(docID: String){
+    fun getData(){
         val docRef = db.collection("users").document(myUserUid).collection("maps")
         docRef.get().addOnSuccessListener { documentSnapshot ->
             for (document in documentSnapshot.documents) {
                 val newMap = document.toObject(Map::class.java)
                 if (newMap != null) {
-                    newMap.id = docID
+                    newMap.id = (document.id)
                     Datamanager.maps.add(newMap)
                 }
                 adapter!!.notifyDataSetChanged()
@@ -96,7 +99,7 @@ class Tracks : AppCompatActivity() {
             for (document in documentSnapshot.documents) {
                 val newMap = document.toObject(Map::class.java)
                 if (newMap != null) {
-                    newMap.id = ("$document.id")
+                    newMap.id = (document.id)
                     Datamanager.maps.add(newMap)
                 }
                 adapter!!.notifyDataSetChanged()
