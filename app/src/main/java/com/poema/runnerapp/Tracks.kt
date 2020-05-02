@@ -1,12 +1,23 @@
 package com.poema.runnerapp
 
+import android.os.Build
 import android.os.Bundle
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-
+import com.google.firebase.firestore.Query
+import com.google.type.Date
+import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.ZoneOffset.*
+import java.time.format.DateTimeFormatter
+import java.time.temporal.TemporalQueries.offset
 
 
 class Tracks : AppCompatActivity() {
@@ -19,6 +30,7 @@ class Tracks : AppCompatActivity() {
     var docUid = ""
     var myUserUid = ""
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_tracks)
@@ -46,7 +58,11 @@ class Tracks : AppCompatActivity() {
         recyclerView.adapter = adapter
 
         if (createdTrack){
-            val a = Map("", name, 5.5, timestr)
+            val timeStamp = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS").withZone(UTC).format(Instant.now())
+
+            println("!!! Klockan är : ${timeStamp}")
+            val a = Map("", name, 5.5, timestr, timeStamp)
 
             db.collection("users").document(myUserUid).collection("maps").add(a)
                 .addOnSuccessListener {uid->
@@ -75,7 +91,8 @@ class Tracks : AppCompatActivity() {
     }
     fun getData(){
         println("!!! varit i getDataWITHadding")
-        val docRef = db.collection("users").document(myUserUid).collection("maps")
+        val docRef = db.collection("users").document(myUserUid).collection("maps").orderBy("timeStamp",
+            Query.Direction.DESCENDING)
         docRef.get().addOnSuccessListener { documentSnapshot ->
             Datamanager.maps.clear()
             for (document in documentSnapshot.documents) {
@@ -91,7 +108,7 @@ class Tracks : AppCompatActivity() {
     }
     fun getDataWithoutAdding(){
         println("!!! varit i getDataWithoutAdding")
-        val docRef = db.collection("users").document(myUserUid).collection("maps")
+        val docRef = db.collection("users").document(myUserUid).collection("maps").orderBy("timeStamp", Query.Direction.DESCENDING)
         docRef.get().addOnSuccessListener { documentSnapshot ->
             for (document in documentSnapshot.documents) {
                 val newMap = document.toObject(Map::class.java)
