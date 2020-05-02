@@ -1,15 +1,12 @@
 package com.poema.runnerapp
 
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.Job
-import java.lang.Thread.sleep
+
 
 
 class Tracks : AppCompatActivity() {
@@ -38,12 +35,7 @@ class Tracks : AppCompatActivity() {
         if(timeUnit >= 0){
             createdTrack = true
         }
-        //if (!createdTrack){
-        //    myUserUid = intent.getStringExtra("fromStartPage")!!
-        //    }
-       // if (createdTrack) {
-       //     myUserUid = intent.getStringExtra("fromNamingToTracks")!!
-      //}
+
         recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
 
         recyclerView.layoutManager = LinearLayoutManager(this)
@@ -68,7 +60,8 @@ class Tracks : AppCompatActivity() {
         }
 
         if(!createdTrack) {
-        getDataWithoutAdding()
+        if (Datamanager.maps.size == 0){
+            getDataWithoutAdding()}
         }
     }
 
@@ -81,10 +74,13 @@ class Tracks : AppCompatActivity() {
         return resultText
     }
     fun getData(){
+        println("!!! varit i getDataWITHadding")
         val docRef = db.collection("users").document(myUserUid).collection("maps")
         docRef.get().addOnSuccessListener { documentSnapshot ->
+            Datamanager.maps.clear()
             for (document in documentSnapshot.documents) {
                 val newMap = document.toObject(Map::class.java)
+
                 if (newMap != null) {
                     newMap.id = (document.id)
                     Datamanager.maps.add(newMap)
@@ -94,6 +90,7 @@ class Tracks : AppCompatActivity() {
         }
     }
     fun getDataWithoutAdding(){
+        println("!!! varit i getDataWithoutAdding")
         val docRef = db.collection("users").document(myUserUid).collection("maps")
         docRef.get().addOnSuccessListener { documentSnapshot ->
             for (document in documentSnapshot.documents) {

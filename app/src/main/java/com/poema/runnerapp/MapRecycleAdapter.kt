@@ -33,22 +33,17 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
             loggedIn = true
             myUserId = auth!!.currentUser!!.uid
         }
-        //använder vår inflator för att skapa en view
         val itemView = layoutInflater.inflate(R.layout.list_item, parent, false )
-        // skapar vi en viewHolder av vår egna klass ViewHolder (skriven längre ner här)
         return ViewHolder(itemView)
     }
-    // hur många views ska recyclerviewn innehålla? så många som finns i persons!
     override fun getItemCount() = maps.size
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        //när en item_view ska befolkas tar vi rätt person från vår data
         val map = maps[position]
-        // sätter in den personens uppgifter i vår view
         holder.textViewName.text = "Name: " + map.name
         holder.textViewLength.text = "Length: " + map.length.toString() + "km"
         holder.textViewTime.text = "Time: " + map.time
-        holder.textViewId.text = "ID: " + map.id
+        //holder.textViewId.text = "ID: " + map.id
         holder.mapPosition = position
     }
     fun removeTrack(position : Int) {
@@ -79,7 +74,7 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
         val textViewName = itemView.findViewById<TextView>(R.id.textName)
         val textViewLength = itemView.findViewById<TextView>(R.id.textLength)
         val textViewTime = itemView.findViewById<TextView>(R.id.textTime)
-        val textViewId = itemView.findViewById<TextView>(R.id.textId)
+       // val textViewId = itemView.findViewById<TextView>(R.id.textId)
         val delButton =  itemView.findViewById<ImageView>(R.id.deleteImage)
         var mapPosition = 0
 
