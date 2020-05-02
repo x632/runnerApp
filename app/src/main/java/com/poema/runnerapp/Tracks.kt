@@ -6,6 +6,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -58,8 +59,10 @@ class Tracks : AppCompatActivity() {
         recyclerView.adapter = adapter
 
         if (createdTrack){
-            val timeStamp = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS").withZone(UTC).format(Instant.now())
+
+            val timeStamp = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")
+                .withZone(ZoneOffset.ofHours(+2)).
+                format(Instant.now())
 
             println("!!! Klockan är : ${timeStamp}")
             val a = Map("", name, 5.5, timestr, timeStamp)
