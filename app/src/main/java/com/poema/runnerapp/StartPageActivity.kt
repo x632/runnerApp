@@ -16,7 +16,7 @@ class StartPageActivity : AppCompatActivity() {
 
         val prevTracksButton = findViewById<Button>(R.id.loginButton)
         button.setOnClickListener {
-            val intent = Intent(this, RecordTrack::class.java)
+            val intent = Intent(this, MapsActivity::class.java)
             startActivity(intent)
         }
         prevTracksButton.setOnClickListener {

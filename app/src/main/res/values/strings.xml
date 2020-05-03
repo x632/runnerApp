@@ -32,4 +32,5 @@
     <string name="loginButton">LOGIN</string>
     <string name="createButton">CREATE ACCOUNT</string>
     <string name="password">password</string>
+    <string name="title_activity_maps">Map</string>
 </resources>
