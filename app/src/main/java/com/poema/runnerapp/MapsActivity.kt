@@ -1,38 +1,49 @@
 package com.poema.runnerapp
 
+import android.app.Activity
 import android.content.Intent
+import android.content.IntentSender
+import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.GoogleMap.OnPolylineClickListener
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.*
 import java.util.*
 import kotlin.concurrent.timer
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.CustomCap
-import com.google.android.gms.maps.model.JointType
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Polyline
-import com.google.android.gms.maps.model.PolylineOptions
-import com.google.android.gms.maps.model.RoundCap
+
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickListener,
+    GoogleMap.OnMarkerClickListener {
 
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickListener {
+    private lateinit var locationCallback: LocationCallback
 
-    private lateinit var mMap: GoogleMap
+    private lateinit var locationRequest: LocationRequest
+    private var locationUpdateState = false
+
+    companion object {
+        private const val LOCATION_PERMISSION_REQUEST_CODE = 1
+        private const val REQUEST_CHECK_SETTINGS = 2
+    }
+
+
+    private lateinit var map: GoogleMap
     var timerStarted = false
-    var timerOn : Timer? = null
+    var timerOn: Timer? = null
     var timeUnit = -1
-    private val COLOR_BLACK_ARGB = -0x1000000
     private val COLOR_GREEN_ARGB = -0xc771c4
     private val COLOR_RED_ARGB = -0xff000
-    private val PATTERN_DASH_LENGTH_PX = 10
-    private val PATTERN_GAP_LENGTH_PX = 10
-
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var lastLocation: Location
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,25 +58,35 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             if (timerOn != null) {
                 startTimer(false)
                 val intent = Intent(this, NamingTrack::class.java)
-                intent.putExtra("Time",timeUnit)
+                intent.putExtra("Time", timeUnit)
                 startActivity(intent)
             }
         }
 
         val startButton = findViewById<Button>(R.id.startbutton)
         startButton.setOnClickListener {
-            if (timerOn == null){
+            if (timerOn == null) {
                 val header = findViewById<TextView>(R.id.header)
                 header.text = "Running.."
                 startTimer(true)
             }
         }
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(p0: LocationResult) {
+                super.onLocationResult(p0)
+
+                lastLocation = p0.lastLocation
+                doSomethingWithLastLocation(LatLng(lastLocation.latitude, lastLocation.longitude))
+            }
+        }
+        createLocationRequest()
     }
-    fun startTimer(pressedStart : Boolean) {
+    fun startTimer(pressedStart: Boolean) {
         if (pressedStart && !timerStarted) {
             timerOn = timer(period = 1000) {
 
-                timeUnit  ++
+                timeUnit++
 
                 val hours = timeUnit / 36000
                 val minutes = timeUnit % 36000 / 60
@@ -76,8 +97,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
                 timerText.text = strTime
                 timerStarted = true
             }
-        }
-        else {
+        } else {
             timerOn?.cancel()
             timerStarted = false
         }
@@ -93,11 +113,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
      * installed Google Play services and returned to the app.
      */
     override fun onMapReady(googleMap: GoogleMap) {
-        mMap = googleMap
+        map = googleMap
+        map.getUiSettings().setZoomControlsEnabled(true)
+        map.setOnMarkerClickListener(this)
 
-        // Add a marker in Huddinge and move the camera
-        // Add polylines to the map.
-        // Polylines are useful to show a route or some other connection between points.
+
         val polyline1 = googleMap.addPolyline(
             PolylineOptions()
                 .clickable(false)
@@ -134,27 +154,99 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
                     LatLng(59.235537, 17.999822),
                     LatLng(59.235252, 18.001238),
                     LatLng(59.234775, 18.001978)
-
                 )
         )
         // Store a data object with the polyline, used here to indicate an arbitrary type.
         polyline2.tag = "B"
 
         stylePolyline(polyline2)
-
-
-        val huddinge = LatLng(59.2351, 17.9973)
-       // mMap.addMarker(MarkerOptions().position(huddinge).title("Marker in Huddinge"))
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(59.2351, 17.9973), 16.0f),5000,null)
+        //val huddinge = LatLng(59.2351, 17.9973)
+        // mMap.addMarker(MarkerOptions().position(huddinge).title("Marker in Huddinge"))
+        // Map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(59.2351, 17.9973), 16.0f),5000,null)
 
         // Set listeners for click events.
-        googleMap.setOnPolylineClickListener(this)
-
+        //googleMap.setOnPolylineClickListener(this)
+        setUpMap()
     }
+    private fun startLocationUpdates() {
 
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+                LOCATION_PERMISSION_REQUEST_CODE
+            )
+            return
+        }
+        fusedLocationClient.requestLocationUpdates(
+            locationRequest,
+            locationCallback,
+            null /* Looper */
+        )
+    }
+    private fun createLocationRequest() {
+        // 1
+        locationRequest = LocationRequest()
+        // 2
+        locationRequest.interval = 5000
+        // 3
+        locationRequest.fastestInterval = 4000
+        locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
 
-    override fun onPolylineClick(p0: Polyline?) {
+        val builder = LocationSettingsRequest.Builder()
+            .addLocationRequest(locationRequest)
 
+        // 4
+        val client = LocationServices.getSettingsClient(this)
+        val task = client.checkLocationSettings(builder.build())
+
+        // 5
+        task.addOnSuccessListener {
+            locationUpdateState = true
+            startLocationUpdates()
+        }
+        task.addOnFailureListener { e ->
+            // 6
+            if (e is ResolvableApiException) {
+                // Location settings are not satisfied, but this can be fixed
+                // by showing the user a dialog.
+                try {
+                    // Show the dialog by calling startResolutionForResult(),
+                    // and check the result in onActivityResult().
+                    e.startResolutionForResult(
+                        this@MapsActivity,
+                        REQUEST_CHECK_SETTINGS
+                    )
+                } catch (sendEx: IntentSender.SendIntentException) {
+                    // Ignore the error.
+                }
+            }
+        }
+    }
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CHECK_SETTINGS) {
+            if (resultCode == Activity.RESULT_OK) {
+                locationUpdateState = true
+                startLocationUpdates()
+            }
+        }
+    }
+    // 2
+    override fun onPause() {
+        super.onPause()
+        fusedLocationClient.removeLocationUpdates(locationCallback)
+    }
+    // 3
+    public override fun onResume() {
+        super.onResume()
+        if (!locationUpdateState) {
+            startLocationUpdates()
+        }
     }
     private fun stylePolyline(polyline: Polyline) {
         var type = ""
@@ -164,19 +256,60 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         }
         when (type) {
             "A" ->                 // Use a custom bitmap as the cap at the start of the line.
-            {polyline.color = COLOR_GREEN_ARGB
+            {
+                polyline.color = COLOR_GREEN_ARGB
                 polyline.startCap = RoundCap()
                 polyline.endCap = RoundCap()
             }
-                /*polyline.startCap = CustomCap(
-                    BitmapDescriptorFactory.fromResource(R.drawable.ic_arrow))*/
-            "B" ->                 // Use a round cap at the start of the line.
-            {polyline.color = COLOR_RED_ARGB
-            polyline.startCap = RoundCap()
+
+            "B" -> {
+                polyline.color = COLOR_RED_ARGB
+                polyline.startCap = RoundCap()
                 polyline.endCap = CustomCap(
-                    BitmapDescriptorFactory.fromResource(R.drawable.ic_arrow))}
+                    BitmapDescriptorFactory.fromResource(R.drawable.ic_arrow)
+                )
+            }
         }
         polyline.width = 8.toFloat()
         polyline.jointType = JointType.ROUND
+    }
+    private fun setUpMap() {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+                LOCATION_PERMISSION_REQUEST_CODE
+            )
+            return
+        }
+        map.isMyLocationEnabled = true
+        fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
+            // Got last known location. In some rare situations this can be null.
+
+            if (location != null) {
+                lastLocation = location
+                val currentLatLng = LatLng(location.latitude, location.longitude)
+                println("!!! currentlocation: ${currentLatLng}")
+                val header = findViewById<TextView>(R.id.header)
+                header.text = "${currentLatLng}"
+                map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 12f))
+            }
+        }
+    }
+    override fun onMarkerClick(p0: Marker?) = false
+    override fun onPolylineClick(p0: Polyline?) {
+        println("!!! Clicked on polyline!!")
+    }
+    private fun doSomethingWithLastLocation(location: LatLng) {
+        //val markerOptions = MarkerOptions().position(location)
+        //markerOptions.title("Här nu!")
+        //map.addMarker(markerOptions)
+        val currentLatLng = LatLng(location.latitude, location.longitude)
+        val header = findViewById<TextView>(R.id.header)
+        header.text = "$currentLatLng"
     }
 }
