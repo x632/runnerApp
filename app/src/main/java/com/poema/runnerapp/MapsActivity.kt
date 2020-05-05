@@ -22,8 +22,10 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import java.util.*
 import kotlin.concurrent.timer
+import kotlin.math.asin
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickListener,
     GoogleMap.OnMarkerClickListener  {
@@ -348,8 +350,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
                 lat2
             )
         ) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2)
-        val c = 2 * Math.asin(Math.sqrt(a))
+                sin(dLon / 2) * sin(dLon / 2)
+        val c = 2 * asin(sqrt(a))
         return 6366000 * c
     }
     //Gör om LatLng till Location och räkna distans mellan dem
