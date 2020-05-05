@@ -20,7 +20,7 @@ class StartPageActivity : AppCompatActivity() {
             startActivity(intent)
         }
         prevTracksButton.setOnClickListener {
-            val intent = Intent(this, Tracks::class.java)
+            val intent = Intent(this, TracksActivity::class.java)
             startActivity(intent)
         }
 

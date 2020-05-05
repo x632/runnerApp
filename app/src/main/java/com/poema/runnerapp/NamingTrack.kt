@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import kotlinx.android.synthetic.main.activity_main.*
 
 class NamingTrack : AppCompatActivity() {
 
@@ -23,7 +22,7 @@ class NamingTrack : AppCompatActivity() {
         timeText.text = resultTimeText
 
         saveButton.setOnClickListener {
-            val intent = Intent(this, Tracks::class.java)
+            val intent = Intent(this, TracksActivity::class.java)
             val trackName = getName()
             intent.putExtra("name", trackName)
             intent.putExtra("time", timeUnit)

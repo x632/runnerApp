@@ -6,22 +6,16 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.google.type.Date
-import java.text.SimpleDateFormat
 import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
 import java.time.ZoneOffset
-import java.time.ZoneOffset.*
 import java.time.format.DateTimeFormatter
-import java.time.temporal.TemporalQueries.offset
 
 
-class Tracks : AppCompatActivity() {
+
+class TracksActivity : AppCompatActivity() {
 
     lateinit var db: FirebaseFirestore
     private var auth: FirebaseAuth? = null

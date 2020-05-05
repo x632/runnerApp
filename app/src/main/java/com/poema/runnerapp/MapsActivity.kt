@@ -4,7 +4,9 @@ import android.app.Activity
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.location.Location
+import android.location.LocationManager
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
@@ -20,22 +22,20 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import java.util.*
 import kotlin.concurrent.timer
+import kotlin.math.cos
+import kotlin.math.sin
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickListener,
-    GoogleMap.OnMarkerClickListener {
-
+    GoogleMap.OnMarkerClickListener  {
 
     private lateinit var locationCallback: LocationCallback
-
     private lateinit var locationRequest: LocationRequest
     private var locationUpdateState = false
-
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
         private const val REQUEST_CHECK_SETTINGS = 2
     }
-
-
+    var myLocList = mutableListOf<LatLng>()
     private lateinit var map: GoogleMap
     var timerStarted = false
     var timerOn: Timer? = null
@@ -48,7 +48,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
@@ -57,6 +56,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         stopButton.setOnClickListener {
             if (timerOn != null) {
                 startTimer(false)
+                onPause()
                 val intent = Intent(this, NamingTrack::class.java)
                 intent.putExtra("Time", timeUnit)
                 startActivity(intent)
@@ -69,19 +69,28 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
                 val header = findViewById<TextView>(R.id.header)
                 header.text = "Running.."
                 startTimer(true)
+                onResume()
             }
         }
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(p0: LocationResult) {
                 super.onLocationResult(p0)
 
                 lastLocation = p0.lastLocation
-                doSomethingWithLastLocation(LatLng(lastLocation.latitude, lastLocation.longitude))
+                doSomethingWithLastLocation(
+                    LatLng(
+                        lastLocation.latitude,
+                        lastLocation.longitude
+                    )
+                )
+
             }
         }
         createLocationRequest()
     }
+
     fun startTimer(pressedStart: Boolean) {
         if (pressedStart && !timerStarted) {
             timerOn = timer(period = 1000) {
@@ -136,18 +145,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
                     LatLng(59.232144, 17.997752),
                     LatLng(59.233752, 17.997419),
                     LatLng(59.234185, 17.998138),
-                    LatLng(59.234712, 17.998578)
-                )
+                    LatLng(59.234712, 17.998578))
+
         )
         // Store a data object with the polyline, used here to indicate an arbitrary type.
         polyline1.tag = "A"
 
         stylePolyline(polyline1)
 
-        val polyline2 = googleMap.addPolyline(
-            PolylineOptions()
-                .clickable(false)
-                .add(
+        val polyline2 = googleMap.addPolyline(PolylineOptions().clickable(false).add(
                     LatLng(59.235185, 17.997256),
                     LatLng(59.235432, 17.997665),
                     LatLng(59.234730, 17.998588),
@@ -189,7 +195,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         )
     }
     private fun createLocationRequest() {
-        // 1
+       // 1
         locationRequest = LocationRequest()
         // 2
         locationRequest.interval = 5000
@@ -207,7 +213,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         // 5
         task.addOnSuccessListener {
             locationUpdateState = true
-            startLocationUpdates()
+            if(timerOn != null){
+            startLocationUpdates()}
+
         }
         task.addOnFailureListener { e ->
             // 6
@@ -231,10 +239,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CHECK_SETTINGS) {
             if (resultCode == Activity.RESULT_OK) {
-                locationUpdateState = true
-                startLocationUpdates()
+               locationUpdateState = true
+                if(timerOn != null){
+                startLocationUpdates()}
             }
         }
+
     }
     // 2
     override fun onPause() {
@@ -244,8 +254,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     // 3
     public override fun onResume() {
         super.onResume()
-        if (!locationUpdateState) {
-            startLocationUpdates()
+        if (timerOn!=null) {  //!locationUpdateState
+           startLocationUpdates()
         }
     }
     private fun stylePolyline(polyline: Polyline) {
@@ -289,14 +299,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         map.isMyLocationEnabled = true
         fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
             // Got last known location. In some rare situations this can be null.
-
             if (location != null) {
                 lastLocation = location
                 val currentLatLng = LatLng(location.latitude, location.longitude)
-                println("!!! currentlocation: ${currentLatLng}")
-                val header = findViewById<TextView>(R.id.header)
-                header.text = "${currentLatLng}"
-                map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 12f))
+                println("!!! FirstLocation: ${currentLatLng}")
+                /*val header = findViewById<TextView>(R.id.header)
+                header.text = "${currentLatLng}"*/
+
+                map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 16f))
             }
         }
     }
@@ -305,11 +315,50 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         println("!!! Clicked on polyline!!")
     }
     private fun doSomethingWithLastLocation(location: LatLng) {
+
         //val markerOptions = MarkerOptions().position(location)
         //markerOptions.title("Här nu!")
         //map.addMarker(markerOptions)
         val currentLatLng = LatLng(location.latitude, location.longitude)
+        myLocList.add(location)
+        if (myLocList.size>1){
+            val options = PolylineOptions()
+            options.color(Color.BLUE)
+            options.width(5f)
+            options.add(myLocList[0])
+            for (LatLng in myLocList) {options.add(LatLng)}
+            map.addPolyline(options)
+
+        }
         val header = findViewById<TextView>(R.id.header)
         header.text = "$currentLatLng"
+        println("!!! $currentLatLng")
+    }
+    //räkna ut distans direkt med LatLng
+    fun distance(StartP: LatLng, EndP: LatLng): Double {
+        val lat1 = StartP.latitude
+        val lat2 = EndP.latitude
+        val lon1 = StartP.longitude
+        val lon2 = EndP.longitude
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+        val a = sin(dLat / 2) * sin(dLat / 2) +
+                cos(Math.toRadians(lat1)) * cos(
+            Math.toRadians(
+                lat2
+            )
+        ) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2)
+        val c = 2 * Math.asin(Math.sqrt(a))
+        return 6366000 * c
+    }
+    //Gör om LatLng till Location och räkna distans mellan dem
+    fun LatLng.toLocation() = Location(LocationManager.GPS_PROVIDER).also {
+        it.latitude = latitude
+        it.longitude = longitude
+    }
+    //och räkna distans mellan dem
+    fun LatLngBounds.computeDistance(): Float {
+        return northeast.toLocation().distanceTo(southwest.toLocation())
     }
 }

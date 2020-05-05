@@ -34,7 +34,7 @@
             android:label="@string/title_activity_maps"></activity>
         <activity android:name=".StartPageActivity" />
 
-        <activity android:name=".Tracks" />
+        <activity android:name=".TracksActivity" />
         <activity android:name=".NamingTrack" />
 
         <activity android:name=".MainActivity">
