@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.poema.runnerapp">
 
     <!--
@@ -31,11 +32,19 @@
 
         <activity
             android:name=".MapsActivity"
-            android:label="@string/title_activity_maps"></activity>
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|keyboardHidden"
+            android:label="@string/title_activity_maps"
+            tools:ignore="LockedOrientationActivity">
+        </activity>
         <activity android:name=".StartPageActivity" />
-
-        <activity android:name=".TracksActivity" />
+        <activity android:name=".TracksActivity"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|keyboardHidden"
+            tools:ignore="LockedOrientationActivity"
+            />
         <activity android:name=".NamingTrack" />
+
 
         <activity android:name=".MainActivity">
             <intent-filter>

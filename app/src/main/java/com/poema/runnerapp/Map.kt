@@ -12,8 +12,8 @@ import java.util.*
 
 data class Map (
     var id: String? = null,
-    var name: String? = null,
     var length : Double? = null,
+    var name: String? = null,
     var time : String? = null,
     var timeStamp : String? = null)
 {

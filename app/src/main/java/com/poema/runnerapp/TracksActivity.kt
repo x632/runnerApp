@@ -1,5 +1,6 @@
 package com.poema.runnerapp
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
@@ -35,8 +36,9 @@ class TracksActivity : AppCompatActivity() {
         if (auth!!.currentUser != null) {
             myUserUid = auth!!.currentUser!!.uid
         }
-        val timeUnit = intent.getIntExtra("time", -1)
-        val name = intent.getStringExtra("name")
+        val timeUnit = intent.getIntExtra("time2", -1)
+        val name = intent.getStringExtra("name2")
+        val distance  = intent.getDoubleExtra("distance2", 0.0)
         val timestr = makeTimeStr(timeUnit)
 
         if(timeUnit >= 0){
@@ -59,8 +61,9 @@ class TracksActivity : AppCompatActivity() {
                 format(Instant.now())
 
             println("!!! Klockan är : ${timeStamp}")
-            val a = Map("", name, 5.5, timestr, timeStamp)
 
+            val a = Map("", distance, name, timestr, timeStamp)
+            println("!!! $a")
             db.collection("users").document(myUserUid).collection("maps").add(a)
                 .addOnSuccessListener {uid->
                     docUid = uid.id
@@ -74,9 +77,11 @@ class TracksActivity : AppCompatActivity() {
 
         if(!createdTrack) {
         if (Datamanager.maps.size == 0){
-            getDataWithoutAdding()}
+            getData()}
         }
     }
+
+
 
 
     fun makeTimeStr(timeUnit: Int): String {
@@ -103,10 +108,11 @@ class TracksActivity : AppCompatActivity() {
             }
         }
     }
-    fun getDataWithoutAdding(){
+  /*  fun getDataWithoutAdding(){
         println("!!! varit i getDataWithoutAdding")
         val docRef = db.collection("users").document(myUserUid).collection("maps").orderBy("timeStamp", Query.Direction.DESCENDING)
         docRef.get().addOnSuccessListener { documentSnapshot ->
+            Datamanager.maps.clear()
             for (document in documentSnapshot.documents) {
                 val newMap = document.toObject(Map::class.java)
                 if (newMap != null) {
@@ -118,5 +124,11 @@ class TracksActivity : AppCompatActivity() {
         }
 
 
+    }*/
+    override fun onBackPressed() {
+        if(!createdTrack) {
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+        }
     }
 }

@@ -6,7 +6,6 @@ import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
-import android.location.LocationManager
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
@@ -22,10 +21,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import java.util.*
 import kotlin.concurrent.timer
-import kotlin.math.asin
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.sqrt
+
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickListener,
     GoogleMap.OnMarkerClickListener  {
@@ -37,15 +33,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
         private const val REQUEST_CHECK_SETTINGS = 2
     }
-    var myLocList = mutableListOf<LatLng>()
+    var myLocLatLngList = mutableListOf<LatLng>()
+    var myLocList = mutableListOf<Location>()
     private lateinit var map: GoogleMap
-    var timerStarted = false
-    var timerOn: Timer? = null
-    var timeUnit = -1
+    private var timerStarted = false
+    private var timerOn: Timer? = null
+    private var timeUnit = -1
     private val COLOR_GREEN_ARGB = -0xc771c4
     private val COLOR_RED_ARGB = -0xff000
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var lastLocation: Location
+    private var totalDistance = 0.0
+    private var distance : Float = 0.0f
+    private var index : Int = 0
+    private var location1 : Location? = null
+    private var location2 : Location? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,6 +63,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
                 onPause()
                 val intent = Intent(this, NamingTrack::class.java)
                 intent.putExtra("Time", timeUnit)
+                intent.putExtra("Distance", totalDistance)
                 startActivity(intent)
             }
         }
@@ -81,12 +84,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
                 super.onLocationResult(p0)
 
                 lastLocation = p0.lastLocation
-                doSomethingWithLastLocation(
+                doSomethingWithLastLocation(lastLocation)
+                /*doSomethingWithLastLocation(
                     LatLng(
                         lastLocation.latitude,
                         lastLocation.longitude
                     )
-                )
+                )*/
 
             }
         }
@@ -314,53 +318,41 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     }
     override fun onMarkerClick(p0: Marker?) = false
     override fun onPolylineClick(p0: Polyline?) {
-        println("!!! Clicked on polyline!!")
     }
-    private fun doSomethingWithLastLocation(location: LatLng) {
+    private fun doSomethingWithLastLocation(location:Location) {
+
+
+       index++
+        if (index%2 == 0){
+            val loc2 = "!!! 2"
+            location2 = location
+        } else {val loc1 = "!!! 1"
+            location1 = location}
+
+        if (index>1 && location1 != null && location2 != null){
+            distance = location1!!.distanceTo(location2!!)
+            totalDistance += distance
+            println ("!!! Distansen mellan koordinaten är: $distance meter. Den accumulerade distansen är : $totalDistance meter")
+        }
 
         //val markerOptions = MarkerOptions().position(location)
         //markerOptions.title("Här nu!")
         //map.addMarker(markerOptions)
-        val currentLatLng = LatLng(location.latitude, location.longitude)
-        myLocList.add(location)
-        if (myLocList.size>1){
+
+        val currentLatLng = LatLng(lastLocation.latitude, lastLocation.longitude)
+        myLocLatLngList.add(currentLatLng)
+        if (myLocLatLngList.size>1){
             val options = PolylineOptions()
             options.color(Color.BLUE)
             options.width(5f)
-            options.add(myLocList[0])
-            for (LatLng in myLocList) {options.add(LatLng)}
+            for (LatLng in myLocLatLngList) {options.add(LatLng)}
             map.addPolyline(options)
-
         }
-        val header = findViewById<TextView>(R.id.header)
-        header.text = "$currentLatLng"
-        println("!!! $currentLatLng")
+
+        val distV = findViewById<TextView>(R.id.distancevalue)
+        distV.text = String.format("%.1f", totalDistance)+" meters";
+        println("!!! Nuvarande kordinat $currentLatLng")
+        map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f))
     }
-    //räkna ut distans direkt med LatLng
-    fun distance(StartP: LatLng, EndP: LatLng): Double {
-        val lat1 = StartP.latitude
-        val lat2 = EndP.latitude
-        val lon1 = StartP.longitude
-        val lon2 = EndP.longitude
-        val dLat = Math.toRadians(lat2 - lat1)
-        val dLon = Math.toRadians(lon2 - lon1)
-        val a = sin(dLat / 2) * sin(dLat / 2) +
-                cos(Math.toRadians(lat1)) * cos(
-            Math.toRadians(
-                lat2
-            )
-        ) *
-                sin(dLon / 2) * sin(dLon / 2)
-        val c = 2 * asin(sqrt(a))
-        return 6366000 * c
-    }
-    //Gör om LatLng till Location och räkna distans mellan dem
-    fun LatLng.toLocation() = Location(LocationManager.GPS_PROVIDER).also {
-        it.latitude = latitude
-        it.longitude = longitude
-    }
-    //och räkna distans mellan dem
-    fun LatLngBounds.computeDistance(): Float {
-        return northeast.toLocation().distanceTo(southwest.toLocation())
-    }
+
 }

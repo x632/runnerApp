@@ -41,7 +41,7 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val map = maps[position]
         holder.textViewName.text = "Name: " + map.name
-        holder.textViewLength.text = "Length: " + map.length.toString() + "km"
+        holder.textViewLength.text = "Length: " + String.format("%.0f", map.length)+" meters"//"Length: " + map.length.toString() + "m"
         holder.textViewTime.text = "Time: " + map.time
         //holder.textViewId.text = "ID: " + map.id
         holder.mapPosition = position
