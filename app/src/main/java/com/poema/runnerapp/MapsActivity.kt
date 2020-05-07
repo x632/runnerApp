@@ -6,9 +6,11 @@ import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
+import android.os.Build
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.common.api.ResolvableApiException
@@ -19,7 +21,14 @@ import com.google.android.gms.maps.GoogleMap.OnPolylineClickListener
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.GeoPoint
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.util.*
+import kotlin.collections.Map
 import kotlin.concurrent.timer
 
 
@@ -48,13 +57,38 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     private var index : Int = 0
     private var location1 : Location? = null
     private var location2 : Location? = null
+    lateinit var db: FirebaseFirestore
+    private var auth: FirebaseAuth? = null
+    var docUid = ""
+    private var myUserUid = ""
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        db = FirebaseFirestore.getInstance()
+        auth = FirebaseAuth.getInstance()
+        if (auth!!.currentUser != null) {
+            myUserUid = auth!!.currentUser!!.uid
+        }
+        val timeStamp = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")
+            .withZone(ZoneOffset.ofHours(+2)).
+            format(Instant.now())
+        val a = Map("", 0.0, "", "", timeStamp)
+        println("!!! $a")
+        db.collection("users").document(myUserUid).collection("maps").add(a)
+            .addOnSuccessListener { uid ->
+                docUid = uid.id
+                println("!!! Tom bana sparades på firestore")
+            }
+            .addOnFailureListener {
+                println("!!! Tomma banan sparades INTE!")
+            }
+
 
         val stopButton = findViewById<Button>(R.id.stopbutton)
         stopButton.setOnClickListener {
@@ -64,12 +98,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
                 val intent = Intent(this, NamingTrack::class.java)
                 intent.putExtra("Time", timeUnit)
                 intent.putExtra("Distance", totalDistance)
+                intent.putExtra("docUid", docUid)
                 startActivity(intent)
             }
         }
 
         val startButton = findViewById<Button>(R.id.startbutton)
         startButton.setOnClickListener {
+
             if (timerOn == null) {
                 val header = findViewById<TextView>(R.id.header)
                 header.text = "Running.."
@@ -321,18 +357,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     }
     private fun doSomethingWithLastLocation(location:Location) {
 
-
+        val speed = location.speed
+        val speedText = findViewById<TextView>(R.id.avgspeedvalue)
+        speedText.text = String.format("%.2f", speed)+" m/sec"
        index++
         if (index%2 == 0){
-            val loc2 = "!!! 2"
             location2 = location
-        } else {val loc1 = "!!! 1"
+        } else {
             location1 = location}
-
         if (index>1 && location1 != null && location2 != null){
             distance = location1!!.distanceTo(location2!!)
             totalDistance += distance
-            println ("!!! Distansen mellan koordinaten är: $distance meter. Den accumulerade distansen är : $totalDistance meter")
         }
 
         //val markerOptions = MarkerOptions().position(location)
@@ -351,8 +386,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
 
         val distV = findViewById<TextView>(R.id.distancevalue)
         distV.text = String.format("%.1f", totalDistance)+" meters";
-        println("!!! Nuvarande kordinat $currentLatLng")
         map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f))
+
+        //spara till firestore
+        val locGeo =  GeoPoint(location.latitude, location.longitude)
+        val a = LocationObject("",locGeo, totalDistance, timeUnit)
+        db.collection("users").document(myUserUid).collection("maps").document(docUid).collection("mapObjects").add(a)
+            .addOnSuccessListener {
+                println("!!! locationObject sparades på firestore")
+            }
+            .addOnFailureListener {
+                println("!!!LocationObject sparades INTE!")
+            }
     }
+
 
 }

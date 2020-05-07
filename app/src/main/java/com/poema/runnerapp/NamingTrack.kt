@@ -16,6 +16,7 @@ class NamingTrack : AppCompatActivity() {
 
         val timeUnit = intent.getIntExtra("Time",0 )
         val distance : Double = intent.getDoubleExtra("Distance", 0.0)
+        val docUid = intent.getStringExtra("docUid")
         val resultTimeText = makeTimeStr(timeUnit)
         val saveButton = findViewById<Button>(R.id.save)
         val timeText= findViewById<TextView>(R.id.timeValue)
@@ -30,6 +31,8 @@ class NamingTrack : AppCompatActivity() {
             intent.putExtra("name2", trackName)
             intent.putExtra("time2", timeUnit)
             intent.putExtra("distance2", distance)
+            intent.putExtra("docUi", docUid)
+
             startActivity(intent)
         }
             cancelBtn.setOnClickListener {

@@ -25,6 +25,7 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
     var loggedIn = false
     var myUserId = ""
     var b = ""
+    var d = ""
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         db = FirebaseFirestore.getInstance()
@@ -51,6 +52,19 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
         if (a.id != null) {
             b = (a.id!!)
         }
+        for (map in Datamanager.maps){
+            println("!!! $map")
+        }
+
+        val c = ObjectDataManager.locationObjects[position]
+        if(c.id != null) {
+            d = (c.id!!)
+        }
+        for (locationObject in ObjectDataManager.locationObjects){
+            println("!!! $locationObject")
+        }
+
+        ObjectDataManager.locationObjects.removeAt(position)
         Datamanager.maps.removeAt(position)
         println("!!!  ID : "+ b +" och userID: "+myUserUid)
        db.collection("users").document(myUserUid).collection("maps").document(b).delete()

@@ -9,7 +9,6 @@
          location permissions for the 'MyLocation' functionality.
     -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -37,21 +36,28 @@
             android:label="@string/title_activity_maps"
             tools:ignore="LockedOrientationActivity">
         </activity>
-        <activity android:name=".StartPageActivity" />
+        <activity android:name=".StartPageActivity"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|keyboardHidden"
+            tools:ignore="LockedOrientationActivity">
+        </activity>
         <activity android:name=".TracksActivity"
             android:screenOrientation="portrait"
             android:configChanges="orientation|keyboardHidden"
             tools:ignore="LockedOrientationActivity"
             />
-        <activity android:name=".NamingTrack" />
-
-
+        <activity android:name=".NamingTrack"
+        android:screenOrientation="portrait"
+        android:configChanges="orientation|keyboardHidden"
+        tools:ignore="LockedOrientationActivity"
+        />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
 
         <meta-data

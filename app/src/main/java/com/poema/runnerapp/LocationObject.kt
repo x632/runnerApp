@@ -1,7 +1,9 @@
 package com.poema.runnerapp
 
+import com.google.firebase.firestore.GeoPoint
+
 data class LocationObject (
-    var locLat : Float? = null,
-    var locLng : Float? = null,
+    var id : String? = null,
+    var locLatLng : GeoPoint? = null,
     var accDistance : Double? = null,
     var time : Int? = null)
