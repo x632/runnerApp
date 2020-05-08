@@ -399,6 +399,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
                 println("!!!LocationObject sparades INTE!")
             }
     }
+    override fun onBackPressed() {
+        if (timerOn == null) {
+            db.collection("users").document(myUserUid).collection("maps").document(docUid).delete()
+                .addOnSuccessListener {
+                    println("!!! Tom bana raderades från firestore")
+                }
+                .addOnFailureListener {
+                    println("!!! Tomma banan raderades INTE!")
+                }
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+        }
+    }
 
 
 }

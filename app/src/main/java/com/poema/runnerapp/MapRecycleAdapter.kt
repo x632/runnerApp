@@ -61,13 +61,13 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
                 "time", Query.Direction.DESCENDING
             )
         docRef1.get().addOnSuccessListener { documentSnapshot ->
-            ObjectDataManager.locationObjects.clear()                                //töm ObjectDatamanager
+            ObjectDataManager.locationObjects.clear()                                //töm ObjectDatamanager...
             for (document in documentSnapshot.documents) {
                 val newLocationObject = document.toObject(LocationObject::class.java)
 
                 if (newLocationObject != null) {
                     newLocationObject.id =
-                        (document.id)                      //....och lägg sedan till dessa mapObjects (som kommer från firestore till objektdatamanager med firestore id
+                        (document.id)                         //....lägg sedan till dessa mapObjects (som kommer från firestore till objektdatamanager med firestore id
                     ObjectDataManager.locationObjects.add(newLocationObject)
                 }
             }
@@ -81,7 +81,7 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
 
         }
     }
-    private fun indexingFunction() {                     //går igenom id-listan och aktiverar nedladdning av MapObjects för respektive map...
+    private fun indexingFunction() {                     //gå igenom id-listan och aktivera radering av MapObjects för mappen...
         mapObjectUidIndex++
         if (mapObjectUidIndex <= idList.size-1) {
             deleteLocationObjects(mapObjectUidIndex)
@@ -89,7 +89,7 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
     }
 
 
-    fun deleteLocationObjects(mapObjectUidIndex: Int) {
+    fun deleteLocationObjects(mapObjectUidIndex: Int) {             //själva raderingen
         db.collection("users").document(myUserUid).collection("maps").document(b).collection("mapObjects").document(idList[mapObjectUidIndex])
             .delete() .addOnSuccessListener {
                 Log.d(TAG, "!!! Document successfully deleted!")
