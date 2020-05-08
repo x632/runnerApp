@@ -4,12 +4,15 @@ import android.app.AlertDialog
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.DialogInterface
+import android.content.Intent
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
 
 import com.google.android.material.snackbar.Snackbar
@@ -126,6 +129,7 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
         val textViewTime = itemView.findViewById<TextView>(R.id.textTime)
        // val textViewId = itemView.findViewById<TextView>(R.id.textId)
         val delButton =  itemView.findViewById<ImageView>(R.id.deleteImage)
+        val chooseTrackBtn = itemView.findViewById<ImageButton>(R.id.chooseImgBtn)
         var mapPosition = 0
 
         init{
@@ -148,6 +152,11 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
                 val alert = dialogBuilder.create()
 
                 alert.show()
+            }
+            chooseTrackBtn.setOnClickListener{
+                val intent = Intent(context, MainActivity::class.java)
+                //intent.putExtra("Time", timeUnit)
+                context.startActivity(intent)
             }
 
 
