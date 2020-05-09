@@ -92,7 +92,7 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
     }
 
 
-    fun deleteLocationObjects(mapObjectUidIndex: Int) {             //själva raderingen
+    private fun deleteLocationObjects(mapObjectUidIndex: Int) {             //själva raderingen
         db.collection("users").document(myUserUid).collection("maps").document(b).collection("mapObjects").document(idList[mapObjectUidIndex])
             .delete() .addOnSuccessListener {
                 Log.d(TAG, "!!! Document successfully deleted!")
@@ -100,9 +100,7 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
             }
                 .addOnFailureListener {
                         e -> Log.w(TAG, "!!! Error deleting document", e)
-
                 }
-
     }
          private fun deleteMap(position: Int){
              Datamanager.maps.removeAt(position)
@@ -154,8 +152,8 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
                 alert.show()
             }
             chooseTrackBtn.setOnClickListener{
-                val intent = Intent(context, MainActivity::class.java)
-                //intent.putExtra("Time", timeUnit)
+                val intent = Intent(context, ChosenTrackMapActivity::class.java)
+                intent.putExtra("position", mapPosition)
                 context.startActivity(intent)
             }
 

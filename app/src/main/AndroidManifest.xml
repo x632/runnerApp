@@ -20,10 +20,21 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-
+        <!--
+             The API key for Google Maps-based APIs is defined as a string resource.
+             (See the file "res/values/google_maps_api.xml").
+             Note that the API key is linked to the encryption key used to sign the APK.
+             You need a different API key for each encryption key, including the release key that is used to
+             sign the APK for publishing.
+             You can define the keys for the debug and release targets in src/debug/ and src/release/.
+        -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyAChHfmwf97pZUP3um8xIoHKTyjeF5WFFE" />
+            android:value="@string/google_maps_key" />
+
+        <activity
+            android:name=".ChosenTrackMapActivity"
+            android:label="@string/title_activity_choosen_track_map2"/>
 
         <meta-data
             android:name="com.google.android.gms.version"
@@ -31,33 +42,32 @@
 
         <activity
             android:name=".MapsActivity"
-            android:screenOrientation="portrait"
             android:configChanges="orientation|keyboardHidden"
             android:label="@string/title_activity_maps"
-            tools:ignore="LockedOrientationActivity">
-        </activity>
-        <activity android:name=".StartPageActivity"
             android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity"/>
+
+        <activity
+            android:name=".StartPageActivity"
             android:configChanges="orientation|keyboardHidden"
-            tools:ignore="LockedOrientationActivity">
-        </activity>
-        <activity android:name=".TracksActivity"
             android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity"/>
+        <activity
+            android:name=".TracksActivity"
             android:configChanges="orientation|keyboardHidden"
-            tools:ignore="LockedOrientationActivity"
-            />
-        <activity android:name=".NamingTrack"
-        android:screenOrientation="portrait"
-        android:configChanges="orientation|keyboardHidden"
-        tools:ignore="LockedOrientationActivity"
-        />
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity" />
+        <activity
+            android:name=".NamingTrack"
+            android:configChanges="orientation|keyboardHidden"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
 
         <meta-data
