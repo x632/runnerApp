@@ -18,6 +18,7 @@
     <string name="nameholder">Name your track</string>
     <string name="cancelbtn">Cancel</string>
     <string name="savebtn">Save track</string>
+    <string name="aot">ahead</string>
     <string name="recyclerheader">Your tracks</string>
     <string name="title_activity_login">Sign in</string>
     <string name="prompt_email">Email</string>

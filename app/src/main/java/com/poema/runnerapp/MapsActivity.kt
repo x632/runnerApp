@@ -170,9 +170,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
 
 
         val polyline1 = googleMap.addPolyline(
-            PolylineOptions()
-                .clickable(false)
-                .add(
+            PolylineOptions().clickable(false).add(
                     LatLng(59.235136, 17.997155),
                     LatLng(59.235432, 17.997665),
                     LatLng(59.234730, 17.998588),
@@ -310,16 +308,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             "A" ->                 // Use a custom bitmap as the cap at the start of the line.
             {
                 polyline.color = COLOR_GREEN_ARGB
-                polyline.startCap = RoundCap()
-                polyline.endCap = RoundCap()
+                //polyline.startCap = RoundCap()
+                //polyline.endCap = RoundCap()
             }
 
             "B" -> {
                 polyline.color = COLOR_RED_ARGB
-                polyline.startCap = RoundCap()
-                polyline.endCap = CustomCap(
-                    BitmapDescriptorFactory.fromResource(R.drawable.ic_arrow)
-                )
+                //polyline.startCap = RoundCap()
+               // polyline.endCap = CustomCap(
+                 //   BitmapDescriptorFactory.fromResource(R.drawable.ic_arrow)
+                //)
             }
         }
         polyline.width = 8.toFloat()
