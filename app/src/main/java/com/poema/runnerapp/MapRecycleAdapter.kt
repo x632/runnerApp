@@ -33,6 +33,7 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
     var b = ""
     var d = ""
 
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()

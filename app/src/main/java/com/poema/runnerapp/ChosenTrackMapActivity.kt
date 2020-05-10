@@ -3,6 +3,7 @@ package com.poema.runnerapp
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.TextView
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -23,6 +24,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback {
     private val COLOR_GREEN_ARGB = -0xc771c4
     private val COLOR_RED_ARGB = -0xff000
     private var myLatLng : LatLng? = null
+    private var trackName = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,6 +34,11 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback {
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
         val position = intent.getIntExtra("position",0)
+        if (Datamanager.maps[position].name != null) {
+          trackName = Datamanager.maps[position].name!!
+        }
+        val header = findViewById<TextView>(R.id.header)
+        header.text = trackName
         println("!!! positionnumber: $position")
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
