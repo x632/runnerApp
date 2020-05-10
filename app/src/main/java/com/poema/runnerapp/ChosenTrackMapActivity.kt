@@ -409,7 +409,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 .addOnFailureListener {
                     println("!!! Tomma banan raderades INTE!")
                 }
-            val intent = Intent(this, MainActivity::class.java)
+            val intent = Intent(this, TracksActivity::class.java)
             startActivity(intent)
         }
     }
@@ -459,8 +459,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             }
         }
         map.addPolyline(options)
-
-
     }
 
 

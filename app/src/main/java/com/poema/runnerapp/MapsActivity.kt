@@ -90,7 +90,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             }
 
 
-        val stopButton = findViewById<Button>(R.id.stopbutton)
+        val stopButton = findViewById<Button>(R.id.stopButton)
         stopButton.setOnClickListener {
             if (timerOn != null) {
                 startTimer(false)
@@ -166,26 +166,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
         map.getUiSettings().setZoomControlsEnabled(true)
-        map.setOnMarkerClickListener(this)
+        //map.setOnMarkerClickListener(this)
 
 
         val polyline1 = googleMap.addPolyline(
             PolylineOptions().clickable(false).add(
                     LatLng(59.235136, 17.997155),
-                    LatLng(59.235432, 17.997665),
-                    LatLng(59.234730, 17.998588),
-                    LatLng(59.235537, 17.999822),
-                    LatLng(59.235252, 18.001238),
-                    LatLng(59.234775, 18.001978),
-                    LatLng(59.232385, 18.004181),
-                    LatLng(59.232209, 18.001628),
-                    LatLng(59.231452, 18.001099),
-                    LatLng(59.230673, 18.000230),
-                    LatLng(59.230717, 17.998889),
-                    LatLng(59.232144, 17.997752),
-                    LatLng(59.233752, 17.997419),
-                    LatLng(59.234185, 17.998138),
-                    LatLng(59.234712, 17.998578))
+                    LatLng(59.235432, 17.997665))
 
         )
         // Store a data object with the polyline, used here to indicate an arbitrary type.
@@ -195,12 +182,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
 
         val polyline2 = googleMap.addPolyline(PolylineOptions().clickable(false).add(
                     LatLng(59.235185, 17.997256),
-                    LatLng(59.235432, 17.997665),
-                    LatLng(59.234730, 17.998588),
-                    LatLng(59.235537, 17.999822),
-                    LatLng(59.235252, 18.001238),
-                    LatLng(59.234775, 18.001978)
-                )
+                    LatLng(59.235432, 17.997665))
         )
         // Store a data object with the polyline, used here to indicate an arbitrary type.
         polyline2.tag = "B"
@@ -343,9 +325,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
                 lastLocation = location
                 val currentLatLng = LatLng(location.latitude, location.longitude)
                 println("!!! FirstLocation: ${currentLatLng}")
-                /*val header = findViewById<TextView>(R.id.header)
-                header.text = "${currentLatLng}"*/
-
                 map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 16f))
             }
         }
