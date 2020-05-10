@@ -22,6 +22,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback {
     private var b = ""
     private val COLOR_GREEN_ARGB = -0xc771c4
     private val COLOR_RED_ARGB = -0xff000
+    private var myLatLng : LatLng? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,6 +64,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback {
             for (locationObject in ObjectDataManager.locationObjects) {
                 println("!!! ${locationObject.time} sekunder, plats:${locationObject.locLatLng}")
             }
+            drawPolylines()
         }
     }
     /**
@@ -79,10 +81,11 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback {
 
         // Add a marker in Sydney and move the camera
         val sydney = LatLng(-34.0, 151.0)
-        map.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        map.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+        /*map.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
+        map.moveCamera(CameraUpdateFactory.newLatLng(sydney))*/
+
     }
-    private fun stylePolyline(polyline: Polyline) {
+    /*private fun stylePolyline(polyline: Polyline) {
         var type = ""
         // Get the data object stored with the polyline.
         if (polyline.tag != null) {
@@ -106,22 +109,36 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
         polyline.width = 8.toFloat()
         polyline.jointType = JointType.ROUND
-    }
+    }*/
     fun drawPolylines() {
-
+        println("!!! Been here!!!!!!")
         val options = PolylineOptions()
         options.color(Color.BLUE)
         options.width(5f)
         for (locationObject in ObjectDataManager.locationObjects) {
-            //convertering av geopoint här
-            options.add(locationObject.locLatLng)                                     // är här!!!!
+            if (locationObject.locLatLng != null) {
+                val lat: Double = locationObject.locLatLng!!.getLatitude()
+                val lng: Double = locationObject.locLatLng!!.getLongitude()
+                myLatLng = LatLng(lat,lng)
+                println("!!! $myLatLng")
+                options.add(myLatLng!!)
+
+            }
         }
         map.addPolyline(options)
-        map.animateCamera(CameraUpdateFactory.newLatLngZoom(locationObject.locLatLng[0], 15f))
-        }
 
-
-        }
-
+        val currLatLng = LatLng(59.235128, 17.997094)
+        map.animateCamera(CameraUpdateFactory.newLatLngZoom(currLatLng, 15f))
+    }
+   /* if (myLocLatLngList.size>1){
+        val options = PolylineOptions()
+        options.color(Color.BLUE)
+        options.width(5f)
+        for (LatLng in myLocLatLngList) {options.add(LatLng)}
+        map.addPolyline(options)
+    }
+*/
 }
+
+
 
