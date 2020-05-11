@@ -32,11 +32,12 @@ import kotlin.concurrent.timer
 
 
 class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickListener,
-    GoogleMap.OnMarkerClickListener  {
+    GoogleMap.OnMarkerClickListener {
 
     private lateinit var locationCallback: LocationCallback
     private lateinit var locationRequest: LocationRequest
     private var locationUpdateState = false
+
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
         private const val REQUEST_CHECK_SETTINGS = 2
@@ -53,20 +54,23 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var lastLocation: Location
     private var totalDistance = 0.0
-    private var distance : Float = 0.0f
-    private var index : Int = 0
-    private var location1 : Location? = null
-    private var location2 : Location? = null
+    private var distance: Float = 0.0f
+    private var index: Int = 0
+    private var location1: Location? = null
+    private var location2: Location? = null
     lateinit var db: FirebaseFirestore
     private var auth: FirebaseAuth? = null
     var docUid = ""
     private var myUserUid = ""
     private var trackName = ""
-    private var myLatLng : LatLng? = null
+    private var myLatLng: LatLng? = null
     private var b = ""
     private val DOT: PatternItem = Dot()
     private val GAP: PatternItem = Gap(8F)
     private val PATTERN_POLYLINE_DOTTED = listOf(GAP, DOT)
+    private var mySec = 0
+
+
     // Create a stroke pattern of a gap followed by a dot.
 
 
@@ -80,7 +84,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
 
         //ta emot position
 
-        val position = intent.getIntExtra("position",0)
+        val position = intent.getIntExtra("position", 0)
         if (Datamanager.maps[position].name != null) {
             trackName = Datamanager.maps[position].name!!
         }
@@ -98,13 +102,12 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         if (auth!!.currentUser != null) {
             myUserUid = auth!!.currentUser!!.uid
         }
-            // gör timestamp
+        // gör timestamp
 
-            val timeStamp = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")
-            .withZone(ZoneOffset.ofHours(+2)).
-            format(Instant.now())
+        val timeStamp = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")
+            .withZone(ZoneOffset.ofHours(+2)).format(Instant.now())
 
-            // Lägg till tom bana i firestore
+        // Lägg till tom bana i firestore
 
         val a = Map("", 0.0, "", "", timeStamp)
         println("!!! $a")
@@ -117,7 +120,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 println("!!! Tomma banan sparades INTE!")
             }
 
-
+        //fixa stopknappen
         val stopButton = findViewById<Button>(R.id.stopbtn)
         stopButton.setOnClickListener {
             if (timerOn != null) {
@@ -130,7 +133,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 startActivity(intent)
             }
         }
-
+        //fixa startknappen
         val startButton = findViewById<Button>(R.id.startbtn)
         startButton.setOnClickListener {
 
@@ -198,7 +201,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         map.setOnMarkerClickListener(this)
 
 
-       /* val polyline1 = googleMap.addPolyline(
+        /* val polyline1 = googleMap.addPolyline(
             PolylineOptions().clickable(false).add(
                 LatLng(59.235136, 17.997155),
                 LatLng(59.235432, 17.997665))
@@ -217,13 +220,15 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
 
         stylePolyline(polyline2)*/
         //val huddinge = LatLng(59.2351, 17.9973)
-        // mMap.addMarker(MarkerOptions().position(huddinge).title("Marker in Huddinge"))
+        //map.addMarker(MarkerOptions().position(59.2351, 17.9973).title("Marker in Huddinge"))
         // Map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(59.2351, 17.9973), 16.0f),5000,null)
 
         // Set listeners for click events.
         //googleMap.setOnPolylineClickListener(this)
+
         setUpMap()
     }
+
     private fun startLocationUpdates() {
 
         if (ActivityCompat.checkSelfPermission(
@@ -244,6 +249,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             null /* Looper */
         )
     }
+
     private fun createLocationRequest() {
 
         locationRequest = LocationRequest()
@@ -256,8 +262,9 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         val task = client.checkLocationSettings(builder.build())
         task.addOnSuccessListener {
             locationUpdateState = true
-            if(timerOn != null){
-                startLocationUpdates()}
+            if (timerOn != null) {
+                startLocationUpdates()
+            }
         }
         task.addOnFailureListener { e ->
             // 6
@@ -277,29 +284,34 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             }
         }
     }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CHECK_SETTINGS) {
             if (resultCode == Activity.RESULT_OK) {
                 locationUpdateState = true
-                if(timerOn != null){
-                    startLocationUpdates()}
+                if (timerOn != null) {
+                    startLocationUpdates()
+                }
             }
         }
 
     }
+
     // 2
     override fun onPause() {
         super.onPause()
         fusedLocationClient.removeLocationUpdates(locationCallback)
     }
+
     // 3
     public override fun onResume() {
         super.onResume()
-        if (timerOn!=null) {  //!locationUpdateState
+        if (timerOn != null) {  //!locationUpdateState
             startLocationUpdates()
         }
     }
+
     private fun stylePolyline(polyline: Polyline) {
         var type = ""
         // Get the data object stored with the polyline.
@@ -325,6 +337,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         polyline.width = 8.toFloat()
         polyline.jointType = JointType.ROUND
     }
+
     private fun setUpMap() {
         if (ActivityCompat.checkSelfPermission(
                 this,
@@ -352,34 +365,39 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             }
         }
     }
+
     override fun onMarkerClick(p0: Marker?) = false
     override fun onPolylineClick(p0: Polyline?) {
     }
-    private fun doSomethingWithLastLocation(location:Location) {
 
-       // val speed = location.speed
+    private fun doSomethingWithLastLocation(location: Location) {
+
+        // val speed = location.speed
         //val speedText = findViewById<TextView>(R.id.avgspeedvalue)
         //speedText.text = String.format("%.2f", speed)+" m/sec"
 
         //skapar ny location och senaste location kollar distansen mellan dem, adderar till totaldistance.
 
         index++
-        if (index%2 == 0){
+        if (index % 2 == 0) {
             location2 = location
         } else {
-            location1 = location}
-        if (index>1 && location1 != null && location2 != null){
+            location1 = location
+        }
+        if (index > 1 && location1 != null && location2 != null) {
             distance = location1!!.distanceTo(location2!!)
             totalDistance += distance
         }
-        //fyller på lista med inkommande locationspunkter och ritar en polyline i realtid
+        //fyller på lista med inkommande locationspunkter och ritar en polyline
         val currentLatLng = LatLng(lastLocation.latitude, lastLocation.longitude)
         myLocLatLngList.add(currentLatLng)
-        if (myLocLatLngList.size>1){
+        if (myLocLatLngList.size > 1) {
             val options = PolylineOptions()
             options.color(Color.BLUE)
             options.width(6f)
-            for (LatLng in myLocLatLngList) {options.add(LatLng)}
+            for (LatLng in myLocLatLngList) {
+                options.add(LatLng)
+            }
             // ritar ut polylinen
             map.addPolyline(options)
         }
@@ -389,9 +407,10 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 17f))
 
         //skapar och sparar LocationObjects till firestore
-        val locGeo =  GeoPoint(location.latitude, location.longitude)
-        val a = LocationObject("",locGeo, totalDistance, timeUnit)
-        db.collection("users").document(myUserUid).collection("maps").document(docUid).collection("mapObjects").add(a)
+        val locGeo = GeoPoint(location.latitude, location.longitude)
+        val a = LocationObject("", locGeo, totalDistance, timeUnit)
+        db.collection("users").document(myUserUid).collection("maps").document(docUid)
+            .collection("mapObjects").add(a)
             .addOnSuccessListener {
                 println("!!! locationObject sparades på firestore")
             }
@@ -399,21 +418,25 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 println("!!!LocationObject sparades INTE!")
             }
     }
+
     // ser till så man inte kan lämna sidan om timern är på - om den inte är på så raderas den tomma banan från firestore först
     override fun onBackPressed() {
         if (timerOn == null) {
             db.collection("users").document(myUserUid).collection("maps").document(docUid).delete()
                 .addOnSuccessListener {
                     println("!!! Tom bana raderades från firestore")
+                    onPause()
                 }
                 .addOnFailureListener {
                     println("!!! Tomma banan raderades INTE!")
                 }
+
             val intent = Intent(this, TracksActivity::class.java)
             startActivity(intent)
         }
     }
-    fun getLocationObjects(position: Int){
+
+    fun getLocationObjects(position: Int) {
         val a = Datamanager.maps[position]
         if (a.id != null) {
             b = (a.id!!)
@@ -434,35 +457,106 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                     ObjectDataManager.locationObjects.add(newLocationObject)
                 }
             }
-            for (locationObject in ObjectDataManager.locationObjects) {
-                println("!!! ${locationObject.time} sekunder, plats:${locationObject.locLatLng}")
-            }
             drawPolylines()
+            makeGhost()
         }
     }
 
     //rita ut den inlästa banan !!
 
     fun drawPolylines() {
-        println("!!! Been here!!!!!!")
         val options = PolylineOptions()
-        options.color(Color.BLACK)
+        options.color(Color.BLUE)
         options.width(6f)
         options.pattern(PATTERN_POLYLINE_DOTTED)
         for (locationObject in ObjectDataManager.locationObjects) {
             if (locationObject.locLatLng != null) {
                 val lat: Double = locationObject.locLatLng!!.getLatitude()
                 val lng: Double = locationObject.locLatLng!!.getLongitude()
-                myLatLng = LatLng(lat,lng)
-                println("!!! $myLatLng")
+                myLatLng = LatLng(lat, lng)
                 options.add(myLatLng!!)
             }
         }
         map.addPolyline(options)
+
+
+
     }
 
+    fun makeGhost() {
+        println("!!! Storlek från början :${ObjectDataManager.locationObjects.size}")
+        for (locationObject in ObjectDataManager.locationObjects) {
+            println("!!! Från NewDataManager Först:   $locationObject")
+        }
 
+        for (x in 1 until ObjectDataManager.locationObjects.size) {
+            println("!!! $x")
+            val object1 = ObjectDataManager.locationObjects[x - 1]
+            val object2 = ObjectDataManager.locationObjects[x]
+            var lat1 = 0.0
+            var lng1 = 0.0
+            var lat2 = 0.0
+            var lng2 = 0.0
+            var time1 = 0
+            var time2 = 0
+            var accDist1 = 0.0
+            var accDist2 = 0.0
+            var latResult = 0.0
+            var lngResult = 0.0
+            var accDistResult = 0.0
+            var timeResult: Int = 0
+
+            lat1 = object1.locLatLng!!.latitude
+            lng1 = object1.locLatLng!!.longitude
+            time1 = object1.time!!
+            accDist1 = object1.accDistance!!
+            lat2 = object2.locLatLng!!.latitude
+            lng2 = object2.locLatLng!!.longitude
+            time2 = object2.time!!
+            accDist2 = object2.accDistance!!
+
+            val latDiff = lat2 - lat1
+            val lngDiff = lng2 - lng1
+            val timeDiff = time2 - time1
+            val accDistDiff = accDist2 - accDist1
+            val latPiece = latDiff / timeDiff
+            val lngPiece = lngDiff / timeDiff
+            val accDistPiece = accDistDiff / timeDiff
+            var latPieces = lat1
+            var lngPieces = lng1
+            var accDistPieces = accDist1
+            for (ind in 1 until timeDiff) {
+                latPieces += latPiece
+                lngPieces += lngPiece
+                accDistPieces += accDistPiece
+                latResult = latPieces
+                lngResult = lngPieces
+                accDistResult = accDistPieces
+                timeResult = time1 + ind
+
+                val locGeo = GeoPoint(latResult, lngResult)
+                val locObj = LocationObject("$ind", locGeo, accDistResult, timeResult)
+                NewDataManager.newLocationObjects.add(locObj)
+            }
+        }
+        for (locationObject in NewDataManager.newLocationObjects) {
+            if (locationObject != null) {
+                val pos = locationObject.time!!
+                val ob = locationObject!!
+                ObjectDataManager.locationObjects.add(pos, ob)
+            }
+        }
+        for (locationObject in ObjectDataManager.locationObjects) {
+            println("!!! Sedan:   $locationObject")
+            val object2 = locationObject
+            val lt1 = object2.locLatLng!!.latitude
+            val lg1 = object2.locLatLng!!.longitude
+            map.addMarker(MarkerOptions().position(LatLng(lt1, lg1)).title("Ghost").visible(false)
+            )
+        }
+    }
 }
+
 
 
 
