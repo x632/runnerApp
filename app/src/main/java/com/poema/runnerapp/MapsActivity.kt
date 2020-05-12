@@ -168,7 +168,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         map.getUiSettings().setZoomControlsEnabled(true)
         //map.setOnMarkerClickListener(this)
 
-
+/*
         val polyline1 = googleMap.addPolyline(
             PolylineOptions().clickable(false).add(
                     LatLng(59.235136, 17.997155),
@@ -193,7 +193,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         // Map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(59.2351, 17.9973), 16.0f),5000,null)
 
         // Set listeners for click events.
-        //googleMap.setOnPolylineClickListener(this)
+        //googleMap.setOnPolylineClickListener(this)*/
         setUpMap()
     }
     private fun startLocationUpdates() {
@@ -347,9 +347,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             totalDistance += distance
         }
 
-        //val markerOptions = MarkerOptions().position(location)
-        //markerOptions.title("Här nu!")
-        //map.addMarker(markerOptions)
 
         val currentLatLng = LatLng(lastLocation.latitude, lastLocation.longitude)
         myLocLatLngList.add(currentLatLng)
@@ -362,8 +359,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         }
 
         val distV = findViewById<TextView>(R.id.distancevalue)
-        distV.text = String.format("%.1f", totalDistance)+" meters";
-        map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f))
+        distV.text = String.format("%.1f", totalDistance)+" meters"
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 16f))
 
         //spara till firestore
         val locGeo =  GeoPoint(location.latitude, location.longitude)
@@ -389,6 +386,4 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             startActivity(intent)
         }
     }
-
-
 }

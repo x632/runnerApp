@@ -21,7 +21,6 @@ class NamingTrack : AppCompatActivity() {
         val saveButton = findViewById<Button>(R.id.save)
         val timeText= findViewById<TextView>(R.id.timeValue)
         val lengthText = findViewById<TextView>(R.id.textView4)
-        val cancelBtn = findViewById<Button>(R.id.cancel)
         lengthText.text = String.format("%.0f", distance)+" meters"
         timeText.text = resultTimeText
 
@@ -33,10 +32,6 @@ class NamingTrack : AppCompatActivity() {
             intent.putExtra("distance2", distance)
             intent.putExtra("docUi", docUid)
 
-            startActivity(intent)
-        }
-            cancelBtn.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
         }
     }
@@ -53,10 +48,7 @@ class NamingTrack : AppCompatActivity() {
         return "%1$02d:%2$02d:%3$02d".format(hours, minutes, seconds)
     }
     override fun onBackPressed() {
-            Toast.makeText(getApplicationContext(), "You cannot go back here. You can always delete your track on the next page. Or cancel",
+            Toast.makeText(getApplicationContext(), "You cannot go back here. You can always delete your track on the next page.",
                 Toast.LENGTH_LONG).show();
-
-
-
     }
 }
