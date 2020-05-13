@@ -44,6 +44,7 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
         val itemView = layoutInflater.inflate(R.layout.list_item, parent, false )
         return ViewHolder(itemView)
     }
+
     override fun getItemCount() = maps.size
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -54,6 +55,7 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
         //holder.textViewId.text = "ID: " + map.id
         holder.mapPosition = position
     }
+
     fun removeTrack(position : Int) {
         val a = Datamanager.maps[position]
         if (a.id != null) {
@@ -85,13 +87,13 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
 
         }
     }
+
     private fun indexingFunction() {                     //gå igenom id-listan och aktivera radering av MapObjects för mappen...
         mapObjectUidIndex++
         if (mapObjectUidIndex <= idList.size-1) {
             deleteLocationObjects(mapObjectUidIndex)
         }
     }
-
 
     private fun deleteLocationObjects(mapObjectUidIndex: Int) {             //själva raderingen
         db.collection("users").document(myUserUid).collection("maps").document(b).collection("mapObjects").document(idList[mapObjectUidIndex])
@@ -103,7 +105,8 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
                         e -> Log.w(TAG, "!!! Error deleting document", e)
                 }
     }
-         private fun deleteMap(position: Int){
+
+    private fun deleteMap(position: Int){
              Datamanager.maps.removeAt(position)
              println("!!!  ID : "+ b +" och userID: "+myUserUid)
              db.collection("users").document(myUserUid).collection("maps").document(b).delete()
@@ -114,7 +117,6 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
                  .addOnFailureListener {
                          e -> Log.w(TAG, "!!! Error deleting document", e)
                  }
-
          }
 
     private fun onDeleteCompletion(){
@@ -157,10 +159,6 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
                 intent.putExtra("position", mapPosition)
                 context.startActivity(intent)
             }
-
-
         }
-
     }
-
 }

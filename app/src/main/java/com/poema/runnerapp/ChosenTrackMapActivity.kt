@@ -8,6 +8,7 @@ import android.graphics.Color
 import android.location.Location
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.widget.Button
 import android.widget.TextView
 import androidx.annotation.RequiresApi
@@ -25,7 +26,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.Query
-import org.w3c.dom.Text
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -52,8 +52,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private var timerStarted = false
     private var timerOn: Timer? = null
     private var timeUnit = -1
-    private val COLOR_GREEN_ARGB = -0xc771c4
-    private val COLOR_RED_ARGB = -0xff000
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var lastLocation: Location
     private var totalDistance = 0.0
@@ -89,7 +87,22 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         if (Datamanager.maps[position].name != null) {
             trackName = Datamanager.maps[position].name!!
         }
-
+        val handler = Handler()
+        val delay = 1000 //milliseconds
+        handler.postDelayed(object : Runnable {
+            override fun run() {
+                if (timeUnit < markerList.size && timerOn != null) {
+                    if (timeUnit >= 0) {
+                        val a = markerList[timeUnit]
+                        a.isVisible = true
+                        val b = markerList[sec]
+                        b.isVisible = false
+                    }
+                    sec = timeUnit
+                }
+                handler.postDelayed(this, delay.toLong())
+            }
+        }, delay.toLong())
         //Skriv in tracknamnet i rubriken
 
         val header = findViewById<TextView>(R.id.header)
@@ -152,7 +165,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 super.onLocationResult(p0)
 
                 lastLocation = p0.lastLocation
-                startGhost()
+                //startGhost()
                 println("!!! timeunit: $timeUnit")
                 doSomethingWithLastLocation(lastLocation)
                 /*doSomethingWithLastLocation(
@@ -200,46 +213,10 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         }
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
-        map.getUiSettings().setZoomControlsEnabled(true)
+        map.uiSettings.isZoomControlsEnabled = false
         //map.setOnMarkerClickListener(this)
-
-
-        /* val polyline1 = googleMap.addPolyline(
-            PolylineOptions().clickable(false).add(
-                LatLng(59.235136, 17.997155),
-                LatLng(59.235432, 17.997665))
-        )
-
-        polyline1.tag = "A"
-
-        stylePolyline(polyline1)
-
-        val polyline2 = googleMap.addPolyline(PolylineOptions().clickable(false).add(
-            LatLng(59.235185, 17.997256),
-            LatLng(59.235432, 17.997665))
-        )
-
-        polyline2.tag = "B"
-
-        stylePolyline(polyline2)*/
-        //val huddinge = LatLng(59.2351, 17.9973)
-        //map.addMarker(MarkerOptions().position(59.2351, 17.9973).title("Marker in Huddinge"))
-        // Map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(59.2351, 17.9973), 16.0f),5000,null)
-
-        // Set listeners for click events.
-        //googleMap.setOnPolylineClickListener(this)
-
         setUpMap()
     }
 
@@ -278,7 +255,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             locationUpdateState = true
             if (timerOn != null) {
                 startLocationUpdates()
-                startGhost()
+                //startGhost()
             }
         }
         task.addOnFailureListener { e ->
@@ -322,7 +299,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     public override fun onResume() {
         super.onResume()
         if (timerOn != null) {  //!locationUpdateState
-            startGhost()
+            //startGhost()
             startLocationUpdates()
         }
     }
@@ -352,7 +329,9 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         }
     }
 
-    override fun onMarkerClick(p0: Marker?) = false
+    override fun onMarkerClick(p0: Marker?): Boolean {
+        return false
+    }
 
         override fun onPolylineClick(p0: Polyline?) {
     }
@@ -383,7 +362,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 val str = String.format("%.1f", (ghostAccDistance - totalDistance)) + " m"
                 aotValue.setTextColor(Color.RED)
                 aotValue.text = str
-                //String.format("%.2f", speed)+" m/sec"
             } else {
                 aot.setTextColor(Color.GREEN)
                 aot.text = "ahead"
@@ -414,7 +392,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
 
         // uppdaterar kameran till nuvarande position
 
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 18f))
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 17f))
 
         //skapar och sparar LocationObjects till firestore till den - i nuläget tomma map:pen.
         val locGeo = GeoPoint(location.latitude, location.longitude)
@@ -479,8 +457,8 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         options.pattern(PATTERN_POLYLINE_DOTTED)
         for (locationObject in ObjectDataManager.locationObjects) {
             if (locationObject.locLatLng != null) {
-                val lat: Double = locationObject.locLatLng!!.getLatitude()
-                val lng: Double = locationObject.locLatLng!!.getLongitude()
+                val lat: Double = locationObject.locLatLng!!.latitude
+                val lng: Double = locationObject.locLatLng!!.longitude
                 myLatLng = LatLng(lat, lng)
                 options.add(myLatLng!!)
             }
@@ -543,11 +521,11 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         for (locationObject in ObjectDataManager.locationObjects) {
             if (locationObject != null) {
                 val pos = locationObject.time!!
-                val ob = locationObject!!
+                val ob = locationObject
                 NewDataManager.newLocationObjects.add(pos, ob)
             }
         }
-        // lägger till markers på varje sekund och gör dem osynliga tills vidare
+        // lägger till markers på varje sekund och gör dem osynliga tillsvidare
         for (locationObject in NewDataManager.newLocationObjects) {
             println("!!! Sedan:   $locationObject")
             val lt1 = locationObject.locLatLng!!.latitude
@@ -559,7 +537,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             println("!!! Från ObjectDataManager Sedan:   $locationObject")
         }
     }
-
 }
 
 

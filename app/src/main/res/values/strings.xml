@@ -7,7 +7,7 @@
     <string name="header">Record track</string>
     <string name="timervalue">00:00:00</string>
     <string name="distance">Distance ran:</string>
-    <string name="avgspeed">Average speed:</string>
+    <string name="Speed">Speed:</string>
     <string name="distancevalue">0m</string>
     <string name="avgspeedvalue">0m/sec</string>
     <string name="headernaming">Please provide a name for your track</string>
