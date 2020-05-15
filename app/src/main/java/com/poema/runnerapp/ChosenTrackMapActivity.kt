@@ -1,19 +1,23 @@
 package com.poema.runnerapp
 
 import android.app.Activity
-import android.content.Intent
-import android.content.IntentSender
+import android.app.AlertDialog
+import android.content.*
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat.startActivity
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -22,6 +26,8 @@ import com.google.android.gms.maps.GoogleMap.OnPolylineClickListener
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
@@ -31,6 +37,7 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.concurrent.timer
+
 
 
 class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickListener,
@@ -71,7 +78,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private val PATTERN_POLYLINE_DOTTED = listOf(GAP, DOT)
     private val markerList = mutableListOf<Marker>()
     private var sec: Int = 0
-
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -140,11 +146,21 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             if (timerOn != null) {
                 startTimer(false)
                 onPause()
-                val intent = Intent(this, NamingTrack::class.java)
-                intent.putExtra("Time", timeUnit)
-                intent.putExtra("Distance", totalDistance)
-                intent.putExtra("docUid", docUid)
-                startActivity(intent)
+                val ghostGoalDistance = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance
+                if (ghostGoalDistance != null) {
+                    if (timeUnit < markerList.size && totalDistance > ghostGoalDistance - 10) {
+                        // vad ska hända när man vunnit
+                        val intent = Intent(this, NamingTrack::class.java)
+                        intent.putExtra("Time", timeUnit)
+                        intent.putExtra("Distance", totalDistance)
+                        intent.putExtra("docUid", docUid)
+                        startActivity(intent)
+                        // radera gamla banan!!
+                        // spara denna bana med samma namn
+                    } else {
+                        eraseIfLostToGhost()
+                    }
+                }
             }
         }
         //fixa startknappen
@@ -168,13 +184,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 //startGhost()
                 println("!!! timeunit: $timeUnit")
                 doSomethingWithLastLocation(lastLocation)
-                /*doSomethingWithLastLocation(
-                    LatLng(
-                        lastLocation.latitude,
-                        lastLocation.longitude
-                    )
-                )*/
-
             }
         }
         getLocationObjects(position)
@@ -201,22 +210,9 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         }
     }
 
-    fun startGhost() {
-        if (timeUnit < markerList.size) {
-            if (timeUnit >= 0) {
-                val a = markerList[timeUnit]
-                a.isVisible = true
-                val b = markerList[sec]
-                b.isVisible = false
-            }
-            sec = timeUnit
-        }
-    }
-
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
         map.uiSettings.isZoomControlsEnabled = false
-        //map.setOnMarkerClickListener(this)
         setUpMap()
     }
 
@@ -259,19 +255,14 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             }
         }
         task.addOnFailureListener { e ->
-            // 6
             if (e is ResolvableApiException) {
-                // Location settings are not satisfied, but this can be fixed
-                // by showing the user a dialog.
+
                 try {
-                    // Show the dialog by calling startResolutionForResult(),
-                    // and check the result in onActivityResult().
                     e.startResolutionForResult(
                         this@ChosenTrackMapActivity,
                         REQUEST_CHECK_SETTINGS
                     )
                 } catch (sendEx: IntentSender.SendIntentException) {
-                    // Ignore the error.
                 }
             }
         }
@@ -341,6 +332,9 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         //skapar ny location och senaste location kollar distansen mellan dem, adderar till totaldistance.
 
         index++
+        if (index > 3){
+            var hasGoneFarEnough = true
+        }
         if (index % 2 == 0) {
             location2 = location
         } else {
@@ -350,9 +344,9 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             distance = location1!!.distanceTo(location2!!)
             totalDistance += distance
         }
-        //jämför ghostdistansen och den nuvarande distansen -> skriver skillnaden på skärmen
+        //jämför ghostdistansen och den nuvarande distansen, skriver skillnaden på skärmen
 
-        if ((timeUnit < markerList.size)) {
+        if (timeUnit < markerList.size) {
             val aot = findViewById<TextView>(R.id.aot)
             val aotValue = findViewById<TextView>(R.id.aotValue)
             val ghostAccDistance = NewDataManager.newLocationObjects[timeUnit].accDistance
@@ -398,7 +392,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         val locGeo = GeoPoint(location.latitude, location.longitude)
         val a = LocationObject("", locGeo, totalDistance, timeUnit)
         db.collection("users").document(myUserUid).collection("maps").document(docUid)
-            .collection("mapObjects").add(a)
+            .collection("mapObjects").document("$index").set(a)
             .addOnSuccessListener {
                 println("!!! locationObject sparades på firestore")
             }
@@ -408,7 +402,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     }
 
     override fun onBackPressed() {
-        // ser till så man inte kan lämna sidan om timern är på - om den inte är på så raderas den tomma banan från firestore först
+        // ser till så man inte kan lämna sidan om timern är på - om den inte är på så raderas den tomma banan från firestore och man lämnar sidan
         if (timerOn == null) {
             db.collection("users").document(myUserUid).collection("maps").document(docUid).delete()
                 .addOnSuccessListener {
@@ -440,8 +434,8 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 val newLocationObject = document.toObject(LocationObject::class.java)
 
                 if (newLocationObject != null) {
-                    newLocationObject.id =
-                        (document.id)                         //....lägg sedan till dessa mapObjects (som kommer från firestore till objektdatamanager med firestore id
+                   // newLocationObject.id =
+                     //   (document.id)                         //....lägg sedan till dessa mapObjects (som kommer från firestore till objektdatamanager)
                     ObjectDataManager.locationObjects.add(newLocationObject)
                 }
             }
@@ -469,20 +463,19 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     fun makeGhost() {
 
         NewDataManager.newLocationObjects.clear()
-
         println("!!! Storlek från början :${ObjectDataManager.locationObjects.size}")
         for (locationObject in ObjectDataManager.locationObjects) {
             println("!!! Från ObjectDataManager Först:   $locationObject")
         }
-        // kalkylerar fram och lägger till nya objekt för varje sekund istället för var fjärde-femte
+        // kalkylerar fram och lägger till nya objekt för varje sekund istället för var fjärde eller femte
         for (x in 1 until ObjectDataManager.locationObjects.size) {
 
             val object1 = ObjectDataManager.locationObjects[x - 1]
             val object2 = ObjectDataManager.locationObjects[x]
-            var latResult = 0.0
-            var lngResult = 0.0
-            var accDistResult = 0.0
-            var timeResult: Int = 0
+            var latResult : Double
+            var lngResult : Double
+            var accDistResult : Double
+            var timeResult: Int
 
             val lat1 = object1.locLatLng!!.latitude
             val lng1 = object1.locLatLng!!.longitude
@@ -511,13 +504,13 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 lngResult = lngPieces
                 accDistResult = accDistPieces
                 timeResult = time1 + ind
-
+            //skapa de framkalkylerade objekten och lägg in i newdatamanager
                 val locGeo = GeoPoint(latResult, lngResult)
                 val locObj = LocationObject("$ind", locGeo, accDistResult, timeResult)
                 NewDataManager.newLocationObjects.add(locObj)
             }
         }
-        // tar de (nya) gamla värdena och lägger in dem i den nya listan på rätt platser. Varje sekunde får ett eget objekt
+        // tar de gamla värdena och lägger in dem i den nya listan på rätt platser - varje sekund får ett eget objekt
         for (locationObject in ObjectDataManager.locationObjects) {
             if (locationObject != null) {
                 val pos = locationObject.time!!
@@ -525,7 +518,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 NewDataManager.newLocationObjects.add(pos, ob)
             }
         }
-        // lägger till markers på varje sekund och gör dem osynliga tillsvidare
+        // lägger till markers enligt de skapade objekten, på kartan och gör dem osynliga tillsvidare
         for (locationObject in NewDataManager.newLocationObjects) {
             println("!!! Sedan:   $locationObject")
             val lt1 = locationObject.locLatLng!!.latitude
@@ -537,7 +530,43 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             println("!!! Från ObjectDataManager Sedan:   $locationObject")
         }
     }
+
+    fun eraseIfLostToGhost(){
+        println("!!! VARIT I DELETEFUNKTIONEN")
+        for (i in 1..index){
+            db.collection("users").document(myUserUid).collection("maps").document(docUid).collection("mapObjects").document("$i")
+                .delete() .addOnSuccessListener {
+                    Log.d(ContentValues.TAG, "!!! Document successfully deleted!")
+                }
+                .addOnFailureListener {
+                        e -> Log.w(ContentValues.TAG, "!!! Error deleting document", e)
+                }
+
+        }
+        eraseCollection()
+    }
+    fun eraseCollection(){
+                db.collection("users").document(myUserUid).collection("maps").document(docUid).delete()
+                    .addOnSuccessListener {
+                        println("!!! Tom bana raderades från firestore")
+                        onPause()
+                        goHome()
+                    }
+                    .addOnFailureListener {
+                        println("!!! Tomma banan raderades INTE!")
+                    }
+    }
+        fun goHome(){
+            Toast.makeText(getApplicationContext(), "You seem to have tapped 'stop' prematurely. Your attempt has been deleted.",
+                Toast.LENGTH_LONG).show(); goToStartPage()
+        }
+
+    fun goToStartPage(){
+        val intent = Intent(this, StartPageActivity::class.java)
+        startActivity(intent)
+    }
 }
+
 
 
 
