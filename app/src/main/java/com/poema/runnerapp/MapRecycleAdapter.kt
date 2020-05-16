@@ -19,6 +19,8 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MapRecycleAdapter (private val context : Context, private val maps: List<Map>, private val myUserUid: String): RecyclerView.Adapter<MapRecycleAdapter.ViewHolder>() {
     //inflator behövs för att skapa en view utifrån en layout (xml)
@@ -49,10 +51,17 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val map = maps[position]
-        holder.textViewName.text = "Name: " + map.name
+        holder.textViewName.text = map.name
         holder.textViewLength.text = "Length: " + String.format("%.0f", map.length)+" meters"//"Length: " + map.length.toString() + "m"
-        holder.textViewTime.text = "Time: " + map.time
-        //holder.textViewId.text = "ID: " + map.id
+        holder.textViewTime.text = "Best time: " + map.time
+       /* val timestamp = map.timeStamp as com.google.firebase.Timestamp
+        val milliseconds = timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000
+        val sdf = SimpleDateFormat("MM/dd/yyyy")
+        val netDate = Date(milliseconds)
+        val date = sdf.format(netDate).toString()
+        Log.d("TAG170", date)*/
+        val b = map.timeStamp!!
+        holder.textViewDate.text = "Created: " + b.substring(0,b.length-10)
         holder.mapPosition = position
     }
 
@@ -99,7 +108,7 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
         db.collection("users").document(myUserUid).collection("maps").document(b).collection("mapObjects").document(idList[mapObjectUidIndex])
             .delete() .addOnSuccessListener {
                 Log.d(TAG, "!!! Document successfully deleted!")
-               indexingFunction()
+               indexingFunction()    // gå tillbaka till indexingfunction när objektet är raderat - inga trådkrockar!
             }
                 .addOnFailureListener {
                         e -> Log.w(TAG, "!!! Error deleting document", e)
@@ -129,6 +138,7 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
         val textViewLength = itemView.findViewById<TextView>(R.id.textLength)
         val textViewTime = itemView.findViewById<TextView>(R.id.textTime)
        // val textViewId = itemView.findViewById<TextView>(R.id.textId)
+        val textViewDate  = itemView.findViewById<TextView>(R.id.textVdate)
         val delButton =  itemView.findViewById<ImageView>(R.id.deleteImage)
         val chooseTrackBtn = itemView.findViewById<ImageButton>(R.id.chooseImgBtn)
         var mapPosition = 0

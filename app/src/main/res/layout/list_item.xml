@@ -48,10 +48,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="5dp"
                 android:layout_marginTop="5dp"
-                android:layout_marginBottom="5dp"
                 android:text="TextView"
                 android:textColor="@color/colorBTextGreen"
-                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/textLength" />
 
@@ -65,9 +63,9 @@
 
             <ImageButton
                 android:id="@+id/chooseImgBtn"
-                android:layout_width="126dp"
-                android:layout_height="69dp"
-                android:layout_marginEnd="30dp"
+                android:layout_width="136dp"
+                android:layout_height="110dp"
+                android:layout_marginEnd="5dp"
                 android:alpha="1"
                 android:backgroundTint="#552929"
                 android:cropToPadding="false"
@@ -76,6 +74,19 @@
                 app:layout_constraintEnd_toStartOf="@+id/deleteImage"
                 app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/picture" />
+
+            <TextView
+                android:id="@+id/textVdate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:text="TextView"
+                android:textColor="@color/colorBTextGreen"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/textTime" />
 
 
         </androidx.constraintlayout.widget.ConstraintLayout>

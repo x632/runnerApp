@@ -1,7 +1,6 @@
 package com.poema.runnerapp
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.*
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -10,14 +9,12 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
-import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat.startActivity
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -26,8 +23,6 @@ import com.google.android.gms.maps.GoogleMap.OnPolylineClickListener
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
-import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
@@ -146,9 +141,10 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             if (timerOn != null) {
                 startTimer(false)
                 onPause()
-                val ghostGoalDistance = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance
+                var ghostGoalDistance = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance
                 if (ghostGoalDistance != null) {
-                    if (timeUnit < markerList.size && totalDistance > ghostGoalDistance - 10) {
+                    val a = 0.02 * ghostGoalDistance  //procentsatsen för när användaren ska anses vara tillräckligt nära mål för att vara i mål.
+                    if (timeUnit < markerList.size && totalDistance > ghostGoalDistance - a) {
                         // vad ska hända när man vunnit
                         val intent = Intent(this, NamingTrack::class.java)
                         intent.putExtra("Time", timeUnit)
@@ -532,7 +528,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     }
 
     fun eraseIfLostToGhost(){
-        println("!!! VARIT I DELETEFUNKTIONEN")
+
         for (i in 1..index){
             db.collection("users").document(myUserUid).collection("maps").document(docUid).collection("mapObjects").document("$i")
                 .delete() .addOnSuccessListener {
@@ -557,7 +553,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                     }
     }
         fun goHome(){
-            Toast.makeText(getApplicationContext(), "You seem to have tapped 'stop' prematurely. Your attempt has been deleted.",
+            Toast.makeText(getApplicationContext(), "You seem to have pressed 'stop' prematurely. Your record attempt has been deleted.",
                 Toast.LENGTH_LONG).show(); goToStartPage()
         }
 

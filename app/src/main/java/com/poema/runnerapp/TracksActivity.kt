@@ -140,9 +140,9 @@ class TracksActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        if (!createdTrack) {
+
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
-        }
+
     }
 }

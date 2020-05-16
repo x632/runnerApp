@@ -12,6 +12,7 @@
         android:layout_width="wrap_content"
         android:layout_height="80dp"
         android:ems="10"
+        android:hint="track name"
         android:inputType="textPersonName"
         android:textColor="@color/colorTVwhite"
         app:layout_constraintEnd_toEndOf="parent"
