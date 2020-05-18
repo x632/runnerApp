@@ -19,6 +19,7 @@ class DefeatedGhostActivity : AppCompatActivity() {
     private var myUserUid = ""
     private lateinit var docUid : String
     var position = 0
+    private var oldMapId = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,16 +34,27 @@ class DefeatedGhostActivity : AppCompatActivity() {
         val distance: Double = intent.getDoubleExtra("Distance", 0.0)
         docUid = intent.getStringExtra("docUid")
         val index = intent.getIntExtra("ind", 0)
-        position = intent.getIntExtra("posi",0)
-        val trackName = intent.getStringExtra("name3")
+        position = intent.getIntExtra("posit",0)
+        val size = ObjectDataManager.locationObjects.size
+        val a = Datamanager.maps[position]
+        // Obs här finns det som behövs
+        if (a.id != null) {
+            oldMapId = (a.id!!)
+        }
+        println("!!! Positionen ${Datamanager.maps[position]} och index är $size och id:t $oldMapId")
+
+
+
         val resultTimeText = makeTimeStr(timeUnit)
         val saveButton = findViewById<Button>(R.id.save)
         val cancelButton = findViewById<Button>(R.id.cancelBtn)
         val timeText = findViewById<TextView>(R.id.timeValue)
         val lengthText = findViewById<TextView>(R.id.textView4)
         lengthText.text = String.format("%.0f", distance) + " meters"
+        val trackNa = findViewById<TextView>(R.id.tvTrackName)
+        trackNa.text = Datamanager.maps[position].name
         timeText.text = resultTimeText
-
+        val trackName =  Datamanager.maps[position].name
         saveButton.setOnClickListener {
             val intent = Intent(this, TracksActivity::class.java)
             intent.putExtra("name2", trackName)

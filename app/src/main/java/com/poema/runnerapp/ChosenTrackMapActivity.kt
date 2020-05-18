@@ -108,7 +108,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
 
         val header = findViewById<TextView>(R.id.header)
         header.text = trackName
-        println("!!! positionnumber: $position")
 
         //initialisera firestore och auth
 
@@ -141,17 +140,17 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             if (timerOn != null) {
                 startTimer(false)
                 onPause()
+                println("!!! accumulerad distans:  ${NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance}")
                 var ghostGoalDistance = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance
                 if (ghostGoalDistance != null) {
-                    val a = 0.5 * ghostGoalDistance  //procentsatsen för när användaren ska anses vara tillräckligt nära mål för att trycka stop.
-                    if (timeUnit < markerList.size && totalDistance > ghostGoalDistance - a) {
+                    val a = 0.2 * ghostGoalDistance  //procentsatsen för när användaren ska anses vara tillräckligt nära mål för att trycka stop.
+                    if (timeUnit < markerList.size) {//&& totalDistance > ghostGoalDistance - a
                         // vad ska hända när man vunnit
                         val intent = Intent(this, DefeatedGhostActivity::class.java)
                         intent.putExtra("Time", timeUnit)
                         intent.putExtra("Distance", totalDistance)
                         intent.putExtra("docUid", docUid)
                         intent.putExtra("ind",index)
-                        intent.putExtra("name3",trackName)
                         intent.putExtra("posit", position)
                         startActivity(intent)
                     } else {
@@ -440,8 +439,8 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 val newLocationObject = document.toObject(LocationObject::class.java)
 
                 if (newLocationObject != null) {
-                   // newLocationObject.id =
-                     //   (document.id)                         //....lägg sedan till dessa mapObjects (som kommer från firestore till objektdatamanager)
+                   newLocationObject.id =
+                       (document.id)                         //....lägg sedan till dessa mapObjects (som kommer från firestore till objektdatamanager)
                     ObjectDataManager.locationObjects.add(newLocationObject)
                 }
             }
