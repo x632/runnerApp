@@ -94,7 +94,7 @@
         android:layout_marginStart="30dp"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="30dp"
-        android:text="Would you like to race against the 'ghost' of your best time on this track? Make sure you have the same starting position and tap start."
+        android:text="Before starting the race  against your ghost  make sure you have the same starting position!"
         android:textAlignment="center"
         android:textColor="@color/colorTVwhite"
         android:textSize="18sp"
@@ -114,22 +114,6 @@
         app:layout_constraintStart_toEndOf="@+id/aheadortrailing"
         app:layout_constraintTop_toBottomOf="@+id/timer" />
 
-    <fragment
-        android:id="@+id/map"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="10dp"
-        android:layout_marginBottom="10dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/aotValue"
-        tools:context=".ChosenTrackMapActivity" />
-
     <TextView
         android:id="@+id/textView8"
         android:layout_width="wrap_content"
@@ -143,5 +127,18 @@
         app:layout_constraintStart_toEndOf="@+id/aot"
         app:layout_constraintTop_toBottomOf="@+id/timer" />
 
-
+    <fragment
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/aotValue"
+        tools:context=".ChosenTrackMapActivity" />
 </androidx.constraintlayout.widget.ConstraintLayout>

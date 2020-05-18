@@ -42,10 +42,13 @@ class TracksActivity : AppCompatActivity() {
         val distance = intent.getDoubleExtra("distance2", 0.0)
         val timestr = makeTimeStr(timeUnit)
         val docUid2 = intent.getStringExtra("docUi")
+        val eraseSignal = intent.getBooleanExtra("erase",false)
+        val position = intent.getIntExtra("posit", 0)
 
         if (timeUnit >= 0) {
             createdTrack = true
         }
+
 
         recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
 
@@ -53,8 +56,12 @@ class TracksActivity : AppCompatActivity() {
 
         adapter = MapRecycleAdapter(this, Datamanager.maps, myUserUid)
 
+        if (eraseSignal){
+            adapter!!.removeTrack(position)
+        }
         //koppla ihop vår adapter med recyclerview:n
         recyclerView.adapter = adapter
+
 
         if (createdTrack) {
 

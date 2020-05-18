@@ -12,15 +12,11 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
-
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import java.text.SimpleDateFormat
-import java.util.*
 
 class MapRecycleAdapter (private val context : Context, private val maps: List<Map>, private val myUserUid: String): RecyclerView.Adapter<MapRecycleAdapter.ViewHolder>() {
     //inflator behövs för att skapa en view utifrån en layout (xml)
@@ -54,14 +50,8 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
         holder.textViewName.text = map.name
         holder.textViewLength.text = "Length: " + String.format("%.0f", map.length)+" meters"//"Length: " + map.length.toString() + "m"
         holder.textViewTime.text = "Best time: " + map.time
-       /* val timestamp = map.timeStamp as com.google.firebase.Timestamp
-        val milliseconds = timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000
-        val sdf = SimpleDateFormat("MM/dd/yyyy")
-        val netDate = Date(milliseconds)
-        val date = sdf.format(netDate).toString()
-        Log.d("TAG170", date)*/
         val b = map.timeStamp!!
-        holder.textViewDate.text = "Created: " + b.substring(0,b.length-10)
+        holder.textViewDate.text = "Set: " + b.substring(0,b.length-10)
         holder.mapPosition = position
     }
 

@@ -6,22 +6,23 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
-import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
-class NamingTrack : AppCompatActivity() {
+class DefeatedGhostActivity : AppCompatActivity() {
+    //activity_defeated_ghost
 
     lateinit var db: FirebaseFirestore
     private var auth: FirebaseAuth? = null
     private var myUserUid = ""
     private lateinit var docUid : String
+    var position = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_naming_track)
+        setContentView(R.layout.activity_defeated_ghost)
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
         if (auth!!.currentUser != null) {
@@ -32,6 +33,8 @@ class NamingTrack : AppCompatActivity() {
         val distance: Double = intent.getDoubleExtra("Distance", 0.0)
         docUid = intent.getStringExtra("docUid")
         val index = intent.getIntExtra("ind", 0)
+        position = intent.getIntExtra("posi",0)
+        val trackName = intent.getStringExtra("name3")
         val resultTimeText = makeTimeStr(timeUnit)
         val saveButton = findViewById<Button>(R.id.save)
         val cancelButton = findViewById<Button>(R.id.cancelBtn)
@@ -42,26 +45,19 @@ class NamingTrack : AppCompatActivity() {
 
         saveButton.setOnClickListener {
             val intent = Intent(this, TracksActivity::class.java)
-            val trackName = getName()
             intent.putExtra("name2", trackName)
             intent.putExtra("time2", timeUnit)
             intent.putExtra("distance2", distance)
             intent.putExtra("docUi", docUid)
-
+            intent.putExtra("posit",position)
+            intent.putExtra("erase",true)//signal om att radera gamla banan
             startActivity(intent)
         }
         cancelButton.setOnClickListener {
             eraseMapObjects(index)
-            //val intent = Intent(this, MainActivity::class.java)
-            //startActivity(intent)
         }
     }
 
-    fun getName(): String {
-        val answerText = findViewById<EditText>(R.id.trackName)
-        val trackName = answerText.text.toString()
-        return trackName
-    }
 
     fun makeTimeStr(timeUnit: Int): String {
         val hours = timeUnit / 36000
@@ -73,7 +69,7 @@ class NamingTrack : AppCompatActivity() {
     override fun onBackPressed() {
         Toast.makeText(
             getApplicationContext(),
-            "You cannot go back here. You can always delete your track on the next page.",
+            "You cannot go back here. You can always delete your track on the next page, or press 'cancel'.",
             Toast.LENGTH_LONG
         ).show();
     }
@@ -97,7 +93,6 @@ class NamingTrack : AppCompatActivity() {
         db.collection("users").document(myUserUid).collection("maps").document(docUid).delete()
             .addOnSuccessListener {
                 println("!!! Tom bana raderades från firestore")
-                onPause()
                 goHome()
             }
             .addOnFailureListener {

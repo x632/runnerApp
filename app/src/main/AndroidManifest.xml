@@ -31,11 +31,14 @@
             android:value="@string/google_maps_key" />
 
         <activity
+            android:name=".MapsActivity2"
+            android:label="@string/title_activity_maps2"></activity>
+        <activity android:name=".DefeatedGhostActivity" />
+        <activity
             android:name=".ChosenTrackMapActivity"
             android:label="@string/title_activity_choosen_track_map2"
             android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity"
-            />
+            tools:ignore="LockedOrientationActivity" />
 
         <meta-data
             android:name="com.google.android.gms.version"
@@ -46,13 +49,12 @@
             android:configChanges="orientation|keyboardHidden"
             android:label="@string/title_activity_maps"
             android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity"/>
-
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".StartPageActivity"
             android:configChanges="orientation|keyboardHidden"
             android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity"/>
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".TracksActivity"
             android:configChanges="orientation|keyboardHidden"

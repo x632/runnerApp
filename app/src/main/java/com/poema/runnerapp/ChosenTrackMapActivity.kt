@@ -143,16 +143,17 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 onPause()
                 var ghostGoalDistance = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance
                 if (ghostGoalDistance != null) {
-                    val a = 0.02 * ghostGoalDistance  //procentsatsen för när användaren ska anses vara tillräckligt nära mål för att vara i mål.
+                    val a = 0.5 * ghostGoalDistance  //procentsatsen för när användaren ska anses vara tillräckligt nära mål för att trycka stop.
                     if (timeUnit < markerList.size && totalDistance > ghostGoalDistance - a) {
                         // vad ska hända när man vunnit
-                        val intent = Intent(this, NamingTrack::class.java)
+                        val intent = Intent(this, DefeatedGhostActivity::class.java)
                         intent.putExtra("Time", timeUnit)
                         intent.putExtra("Distance", totalDistance)
                         intent.putExtra("docUid", docUid)
+                        intent.putExtra("ind",index)
+                        intent.putExtra("name3",trackName)
+                        intent.putExtra("posit", position)
                         startActivity(intent)
-                        // radera gamla banan!!
-                        // spara denna bana med samma namn
                     } else {
                         eraseIfLostToGhost()
                     }
@@ -205,8 +206,17 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             timerStarted = false
         }
     }
-
+        /**
+         * Manipulates the map once available.
+         * This callback is triggered when the map is ready to be used.
+         * This is where we can add markers or lines, add listeners or move the camera. In this case,
+         * we just add a marker near Sydney, Australia.
+         * If Google Play services is not installed on the device, the user will be prompted to install
+         * it inside the SupportMapFragment. This method will only be triggered once the user has
+         * installed Google Play services and returned to the app.
+         */
     override fun onMapReady(googleMap: GoogleMap) {
+            println("!!! Been HERE!!!!!!!")
         map = googleMap
         map.uiSettings.isZoomControlsEnabled = false
         setUpMap()

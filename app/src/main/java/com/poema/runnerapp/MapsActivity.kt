@@ -365,7 +365,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         //spara till firestore
         val locGeo =  GeoPoint(location.latitude, location.longitude)
         val a = LocationObject("",locGeo, totalDistance, timeUnit)
-        db.collection("users").document(myUserUid).collection("maps").document(docUid).collection("mapObjects").add(a)
+        db.collection("users").document(myUserUid).collection("maps").document(docUid).collection("mapObjects").document("$index").set(a)
             .addOnSuccessListener {
                 println("!!! locationObject sparades på firestore")
             }
