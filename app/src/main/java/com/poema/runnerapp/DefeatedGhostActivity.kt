@@ -12,7 +12,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 class DefeatedGhostActivity : AppCompatActivity() {
-    //activity_defeated_ghost
 
     lateinit var db: FirebaseFirestore
     private var auth: FirebaseAuth? = null
@@ -20,6 +19,7 @@ class DefeatedGhostActivity : AppCompatActivity() {
     private lateinit var docUid : String
     var position = 0
     private var oldMapId = ""
+    lateinit var a : Map
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,13 +36,12 @@ class DefeatedGhostActivity : AppCompatActivity() {
         val index = intent.getIntExtra("ind", 0)
         position = intent.getIntExtra("posit",0)
         val size = ObjectDataManager.locationObjects.size
-        val a = Datamanager.maps[position]
+        a = Datamanager.maps[position]
         // Obs här finns det som behövs
         if (a.id != null) {
             oldMapId = (a.id!!)
         }
         println("!!! Positionen ${Datamanager.maps[position]} och index är $size och id:t $oldMapId")
-
 
 
         val resultTimeText = makeTimeStr(timeUnit)
@@ -55,23 +54,26 @@ class DefeatedGhostActivity : AppCompatActivity() {
         trackNa.text = Datamanager.maps[position].name
         timeText.text = resultTimeText
         val trackName =  Datamanager.maps[position].name
+
+
+        //Savebutton
         saveButton.setOnClickListener {
+            deleteOldMapObjects(size)
             val intent = Intent(this, TracksActivity::class.java)
             intent.putExtra("name2", trackName)
             intent.putExtra("time2", timeUnit)
             intent.putExtra("distance2", distance)
             intent.putExtra("docUi", docUid)
-            intent.putExtra("posit",position)
-            intent.putExtra("erase",true)//signal om att radera gamla banan
             startActivity(intent)
         }
         cancelButton.setOnClickListener {
             eraseMapObjects(index)
+            goHome()
         }
     }
 
 
-    fun makeTimeStr(timeUnit: Int): String {
+    private fun makeTimeStr(timeUnit: Int): String {
         val hours = timeUnit / 36000
         val minutes = timeUnit % 36000 / 60
         val seconds: Int = timeUnit % 60
@@ -80,10 +82,27 @@ class DefeatedGhostActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         Toast.makeText(
-            getApplicationContext(),
+            applicationContext,
             "You cannot go back here. You can always delete your track on the next page, or press 'cancel'.",
             Toast.LENGTH_LONG
-        ).show();
+        ).show()
+    }
+    //radera gamla banans locationsobjects
+    private fun deleteOldMapObjects(index: Int) {
+        val b = Datamanager.maps[position].id!!
+        for (i in 1..index) {
+            db.collection("users").document(myUserUid).collection("maps").document("$b").collection("mapObjects").document("$i")
+                .delete().addOnSuccessListener {
+                    Log.d(ContentValues.TAG, "!!! Document successfully deleted!")
+                }
+                .addOnFailureListener { e ->
+                    Log.w(ContentValues.TAG, "!!! Error deleting document", e)
+                }
+
+
+        }
+        eraseTrack(b)
+
     }
 
     private fun eraseMapObjects(index: Int) {
@@ -99,24 +118,26 @@ class DefeatedGhostActivity : AppCompatActivity() {
                 }
 
         }
-        eraseTrack()
+        eraseTrack(docUid)
     }
-    fun eraseTrack(){
-        db.collection("users").document(myUserUid).collection("maps").document(docUid).delete()
+    private fun eraseTrack(doc:String){
+        db.collection("users").document(myUserUid).collection("maps").document(doc).delete()
             .addOnSuccessListener {
                 println("!!! Tom bana raderades från firestore")
-                goHome()
+                //goHome()
             }
             .addOnFailureListener {
                 println("!!! Tomma banan raderades INTE!")
             }
     }
-    fun goHome(){
-        Toast.makeText(getApplicationContext(), "Your recording has been deleted.",
+    private fun goHome(){
+        Toast.makeText(
+            applicationContext, "Your recording has been deleted.",
             Toast.LENGTH_LONG).show(); goToStartPage()
     }
-    fun goToStartPage(){
+    private fun goToStartPage(){
         val intent = Intent(this, StartPageActivity::class.java)
         startActivity(intent)
     }
+
 }

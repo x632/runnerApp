@@ -37,4 +37,5 @@
     <string name="title_activity_chosen_track_map2">Map</string>
     <string name="title_activity_choosen_track_map2">chosen track</string>
     <string name="title_activity_maps2">Map</string>
+    <string name="Update">UPDATE</string>
 </resources>
