@@ -111,22 +111,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         if (auth!!.currentUser != null) {
             myUserUid = auth!!.currentUser!!.uid
         }
-        // gör timestamp
-       /* val myDate = getCurrentDateTime()
-        val dateInString = myDate.toString("yyyy-MM-dd HH:mm:ss.SSSSSS")
 
-        // Lägg till tom bana i firestore
-
-        val a = Map("", 0.0, "", "", dateInString)
-        println("!!! $a")
-        db.collection("users").document(myUserUid).collection("maps").add(a)
-            .addOnSuccessListener { uid ->
-                docUid = uid.id
-                println("!!! Tom bana sparades på firestore")
-            }
-            .addOnFailureListener {
-                println("!!! Tomma banan sparades INTE!")
-            }*/
 
         //fixa stopknappen
         val stopButton = findViewById<Button>(R.id.stopbtn)
@@ -307,7 +292,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     public override fun onResume() {
         super.onResume()
         if (timerOn != null) {  //!locationUpdateState
-            //startGhost()
             startLocationUpdates()
         }
     }
@@ -327,7 +311,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         }
         map.isMyLocationEnabled = true
         fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
-            // Got last known location. In some rare situations this can be null.
             if (location != null) {
                 lastLocation = location
                 val currentLatLng = LatLng(location.latitude, location.longitude)
@@ -388,10 +371,13 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         //fyller på lista med inkommande locationspunkter och ritar en polyline
         val currentLatLng = LatLng(lastLocation.latitude, lastLocation.longitude)
         myLocLatLngList.add(currentLatLng)
+
         if (myLocLatLngList.size > 1) {
+
             val options = PolylineOptions()
             options.color(Color.GREEN)
             options.width(7f)
+
             for (LatLng in myLocLatLngList) {
                 options.add(LatLng)
             }
@@ -403,7 +389,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
 
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 17f))
 
-        //skapar och sparar LocationObjects till firestore till den - i nuläget tomma map:pen.
+        //skapar och sparar LocationObjects till firestore till den tomma map:pen.
         val locGeo = GeoPoint(location.latitude, location.longitude)
         val a = LocationObject("", locGeo, totalDistance, timeUnit)
         db.collection("users").document(myUserUid).collection("maps").document(docUid)
@@ -578,6 +564,8 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         startActivity(intent)
     }
 }
+
+
 
 
 

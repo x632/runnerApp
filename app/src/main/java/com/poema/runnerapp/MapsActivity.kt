@@ -82,6 +82,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
                 intent.putExtra("Time", timeUnit)
                 intent.putExtra("Distance", totalDistance)
                 intent.putExtra("docUid", docUid)
+                intent.putExtra("ind",index)
                 startActivity(intent)
             }
         }
@@ -114,13 +115,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
 
                 lastLocation = p0.lastLocation
                 doSomethingWithLastLocation(lastLocation)
-                /*doSomethingWithLastLocation(
-                    LatLng(
-                        lastLocation.latitude,
-                        lastLocation.longitude
-                    )
-                )*/
-
             }
         }
         createLocationRequest()
@@ -165,34 +159,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
         map.uiSettings.isZoomControlsEnabled = true
-        //map.setOnMarkerClickListener(this)
 
-/*
-        val polyline1 = googleMap.addPolyline(
-            PolylineOptions().clickable(false).add(
-                    LatLng(59.235136, 17.997155),
-                    LatLng(59.235432, 17.997665))
-
-        )
-        // Store a data object with the polyline, used here to indicate an arbitrary type.
-        polyline1.tag = "A"
-
-        stylePolyline(polyline1)
-
-        val polyline2 = googleMap.addPolyline(PolylineOptions().clickable(false).add(
-                    LatLng(59.235185, 17.997256),
-                    LatLng(59.235432, 17.997665))
-        )
-        // Store a data object with the polyline, used here to indicate an arbitrary type.
-        polyline2.tag = "B"
-
-        stylePolyline(polyline2)
-        //val huddinge = LatLng(59.2351, 17.9973)
-        // mMap.addMarker(MarkerOptions().position(huddinge).title("Marker in Huddinge"))
-        // Map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(59.2351, 17.9973), 16.0f),5000,null)
-
-        // Set listeners for click events.
-        //googleMap.setOnPolylineClickListener(this)*/
         setUpMap()
     }
     private fun startLocationUpdates() {
