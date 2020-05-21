@@ -10,9 +10,9 @@
 
     <Button
         android:id="@+id/stopbtn"
-        android:layout_width="180dp"
+        android:layout_width="170dp"
         android:layout_height="60dp"
-        android:layout_marginEnd="12dp"
+        android:layout_marginEnd="17dp"
         android:background="@layout/roundedcorners"
         android:text="@string/button4"
         android:textColor="@color/colorBTextRed"
@@ -35,9 +35,9 @@
 
     <Button
         android:id="@+id/startbtn"
-        android:layout_width="180dp"
+        android:layout_width="170dp"
         android:layout_height="60dp"
-        android:layout_marginStart="4dp"
+        android:layout_marginStart="17dp"
         android:layout_marginTop="20dp"
         android:background="@layout/roundedcorners"
         android:text="@string/button3"
@@ -82,7 +82,7 @@
         android:text="Trackname"
         android:textAlignment="center"
         android:textColor="@color/colorTVwhite"
-        android:textSize="24sp"
+        android:textSize="30sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -94,7 +94,7 @@
         android:layout_marginStart="30dp"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="30dp"
-        android:text="Before starting the race  against your ghost  make sure you have the same starting position!"
+        android:text="Before starting the race against your ghost make sure you have the same starting position!"
         android:textAlignment="center"
         android:textColor="@color/colorTVwhite"
         android:textSize="18sp"
@@ -140,5 +140,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/aotValue"
-        tools:context=".ChosenTrackMapActivity" />
+        tools:context=".ChosenTrackMapActivity"
+        />
 </androidx.constraintlayout.widget.ConstraintLayout>

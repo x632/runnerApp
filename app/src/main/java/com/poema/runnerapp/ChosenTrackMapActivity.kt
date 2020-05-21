@@ -5,14 +5,12 @@ import android.content.*
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.common.api.ResolvableApiException
@@ -27,9 +25,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.Query
-import java.time.Instant
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
+import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.concurrent.timer
 
@@ -49,7 +45,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     }
 
     var myLocLatLngList = mutableListOf<LatLng>()
-    var myLocList = mutableListOf<Location>()
     private lateinit var map: GoogleMap
     private var timerStarted = false
     private var timerOn: Timer? = null
@@ -75,7 +70,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private var sec: Int = 0
     private var lost = false
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_choosen_track_map2)
@@ -118,13 +112,12 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             myUserUid = auth!!.currentUser!!.uid
         }
         // gör timestamp
-
-        val timeStamp = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")
-            .withZone(ZoneOffset.ofHours(+2)).format(Instant.now())
+       /* val myDate = getCurrentDateTime()
+        val dateInString = myDate.toString("yyyy-MM-dd HH:mm:ss.SSSSSS")
 
         // Lägg till tom bana i firestore
 
-        val a = Map("", 0.0, "", "", timeStamp)
+        val a = Map("", 0.0, "", "", dateInString)
         println("!!! $a")
         db.collection("users").document(myUserUid).collection("maps").add(a)
             .addOnSuccessListener { uid ->
@@ -133,7 +126,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             }
             .addOnFailureListener {
                 println("!!! Tomma banan sparades INTE!")
-            }
+            }*/
 
         //fixa stopknappen
         val stopButton = findViewById<Button>(R.id.stopbtn)
@@ -144,7 +137,8 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 println("!!! accumulerad distans:  ${NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance}")
                 var ghostGoalDistance = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance
                 if (ghostGoalDistance != null) {
-                    val a = 0.04 * ghostGoalDistance  //procentsatsen för när användaren ska anses vara tillräckligt nära mål för att trycka stop.
+                    val a = 0.04 * ghostGoalDistance  //procentsatsen för när användaren ska anses vara tillräckligt nära mål mätt i ackumulerad distans
+                                                                // för att tiden ska räknas som rekord.
                     if (timeUnit < markerList.size && totalDistance > ghostGoalDistance - a) {
                         // vad ska hända när man vunnit
                         val intent = Intent(this, DefeatedGhostActivity::class.java)
@@ -165,10 +159,22 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         startButton.setOnClickListener {
 
             if (timerOn == null) {
-                val headerTextV = findViewById<TextView>(R.id.header)
-                headerTextV.text = "Running.."
-                startTimer(true)
-                onResume()
+                val myDate = getCurrentDateTime()
+                val dateInString = myDate.toString("yyyy-MM-dd HH:mm:ss.SSSSSS")
+
+                // Lägg till tom bana i firestore
+
+                val a = Map("", 0.0, "", "", dateInString)
+                println("!!! $a")
+                db.collection("users").document(myUserUid).collection("maps").add(a)
+                    .addOnSuccessListener { uid ->
+                        docUid = uid.id
+                        startingFunction()
+                        println("!!! Tom bana sparades på firestore")
+                    }
+                    .addOnFailureListener {
+                        println("!!! Tomma banan sparades INTE!")
+                    }
             }
         }
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -185,6 +191,20 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         }
         getLocationObjects(position)
         createLocationRequest()
+    }
+
+    private fun getCurrentDateTime(): Date {
+        return Calendar.getInstance().time
+    }
+    private fun startingFunction () {
+        val header = findViewById<TextView>(R.id.header)
+        header.text = "Running.."
+        startTimer(true)
+        onResume()
+    }
+    private fun Date.toString(format: String, locale: Locale = Locale.getDefault()): String {
+        val formatter = SimpleDateFormat(format, locale)
+        return formatter.format(this)
     }
 
     private fun startTimer(pressedStart: Boolean) {
@@ -320,17 +340,15 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         return false
     }
 
-        override fun onPolylineClick(p0: Polyline?) {
+    override fun onPolylineClick(p0: Polyline?) {
     }
 
     private fun doSomethingWithLastLocation(location: Location) {
 
-        //skapar ny location och senaste location kollar distansen mellan dem, adderar till totaldistance.
+        //skapar ny location och senaste location - kollar distansen mellan dem, adderar till totaldistance.
 
         index++
-        if (index > 3){
-            var hasGoneFarEnough = true
-        }
+
         if (index % 2 == 0) {
             location2 = location
         } else {
@@ -401,15 +419,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     override fun onBackPressed() {
         // ser till så man inte kan lämna sidan om timern är på - om den inte är på så raderas den tomma banan från firestore och man lämnar sidan
         if (timerOn == null) {
-            db.collection("users").document(myUserUid).collection("maps").document(docUid).delete()
-                .addOnSuccessListener {
-                    println("!!! Tom bana raderades från firestore")
-                    onPause()
-                }
-                .addOnFailureListener {
-                    println("!!! Tomma banan raderades INTE!")
-                }
-
             val intent = Intent(this, TracksActivity::class.java)
             startActivity(intent)
         }
@@ -553,19 +562,19 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                         println("!!! Tomma banan raderades INTE!")
                     }
     }
-        private fun goHome(){
-            var a = ""
-            a = if (lost) {
+    private fun goHome(){
+        val a: String = if (lost) {
                 "Your record attempt has been deleted"
             } else{
                 "You seem to have pressed 'stop' prematurely. Your record attempt has been deleted."
             }
-            Toast.makeText(getApplicationContext(), "$a",
+            Toast.makeText(
+                applicationContext, a,
                 Toast.LENGTH_LONG).show(); goToStartPage()
         }
 
     private fun goToStartPage(){
-        val intent = Intent(this, StartPageActivity::class.java)
+        val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
     }
 }

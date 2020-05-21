@@ -32,7 +32,7 @@ class DefeatedGhostActivity : AppCompatActivity() {
 
         val timeUnit = intent.getIntExtra("Time", 0)
         val distance: Double = intent.getDoubleExtra("Distance", 0.0)
-        docUid = intent.getStringExtra("docUid")
+        docUid = intent.getStringExtra("docUid")!!
         val index = intent.getIntExtra("ind", 0)
         position = intent.getIntExtra("posit",0)
         val size = ObjectDataManager.locationObjects.size
@@ -91,7 +91,7 @@ class DefeatedGhostActivity : AppCompatActivity() {
     private fun deleteOldMapObjects(index: Int) {
         val b = Datamanager.maps[position].id!!
         for (i in 1..index) {
-            db.collection("users").document(myUserUid).collection("maps").document("$b").collection("mapObjects").document("$i")
+            db.collection("users").document(myUserUid).collection("maps").document(b).collection("mapObjects").document("$i")
                 .delete().addOnSuccessListener {
                     Log.d(ContentValues.TAG, "!!! Document successfully deleted!")
                 }
@@ -136,7 +136,7 @@ class DefeatedGhostActivity : AppCompatActivity() {
             Toast.LENGTH_LONG).show(); goToStartPage()
     }
     private fun goToStartPage(){
-        val intent = Intent(this, StartPageActivity::class.java)
+        val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
     }
 

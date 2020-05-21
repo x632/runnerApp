@@ -6,11 +6,9 @@ import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
-import android.os.Build
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.common.api.ResolvableApiException
@@ -24,11 +22,9 @@ import com.google.android.gms.maps.model.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
-import java.time.Instant
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
+import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.Map
+import java.util.Calendar.*
 import kotlin.concurrent.timer
 
 
@@ -43,7 +39,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         private const val REQUEST_CHECK_SETTINGS = 2
     }
     var myLocLatLngList = mutableListOf<LatLng>()
-    var myLocList = mutableListOf<Location>()
     private lateinit var map: GoogleMap
     private var timerStarted = false
     private var timerOn: Timer? = null
@@ -62,7 +57,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     var docUid = ""
     private var myUserUid = ""
 
-    @RequiresApi(Build.VERSION_CODES.O)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
@@ -75,23 +70,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         if (auth!!.currentUser != null) {
             myUserUid = auth!!.currentUser!!.uid
         }
-        val timeStamp = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")
-            .withZone(ZoneOffset.ofHours(+2)).
-            format(Instant.now())
-        val a = Map("", 0.0, "", "", timeStamp)
-        println("!!! $a")
-        db.collection("users").document(myUserUid).collection("maps").add(a)
-            .addOnSuccessListener { uid ->
-                docUid = uid.id
-                println("!!! Tom bana sparades på firestore")
-            }
-            .addOnFailureListener {
-                println("!!! Tomma banan sparades INTE!")
-            }
 
 
         val stopButton = findViewById<Button>(R.id.stopButton)
         stopButton.setOnClickListener {
+
             if (timerOn != null) {
                 startTimer(false)
                 onPause()
@@ -107,10 +90,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         startButton.setOnClickListener {
 
             if (timerOn == null) {
-                val header = findViewById<TextView>(R.id.header)
-                header.text = "Running.."
-                startTimer(true)
-                onResume()
+                val myDate = getCurrentDateTime()
+                val dateInString = myDate.toString("yyyy-MM-dd HH:mm:ss.SSSSSS")
+
+                val a = Map("", 0.0, "", "", dateInString)
+                db.collection("users").document(myUserUid).collection("maps").add(a)
+                    .addOnSuccessListener { uid ->
+                        docUid = uid.id
+                        startingFunction()
+                        println("!!! Tom bana sparades!")
+                    }
+                    .addOnFailureListener {
+                        println("!!! Tomma banan sparades INTE!")
+                    }
+
             }
         }
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -132,8 +125,22 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         }
         createLocationRequest()
     }
+    private fun getCurrentDateTime(): Date {
+        return getInstance().time
+    }
+    private fun Date.toString(format: String, locale: Locale = Locale.getDefault()): String {
+        val formatter = SimpleDateFormat(format, locale)
+        return formatter.format(this)
+    }
+    private fun startingFunction (){
+        val header = findViewById<TextView>(R.id.header)
+        header.text = "Running.."
+        startTimer(true)
+        onResume()
 
-    fun startTimer(pressedStart: Boolean) {
+    }
+
+    private fun startTimer(pressedStart: Boolean) {
         if (pressedStart && !timerStarted) {
             timerOn = timer(period = 1000) {
 
@@ -154,18 +161,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         }
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
+
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
-        map.getUiSettings().setZoomControlsEnabled(true)
+        map.uiSettings.isZoomControlsEnabled = true
         //map.setOnMarkerClickListener(this)
 
 /*
@@ -375,13 +374,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     }
     override fun onBackPressed() {
         if (timerOn == null) {
-            db.collection("users").document(myUserUid).collection("maps").document(docUid).delete()
-                .addOnSuccessListener {
-                    println("!!! Tom bana raderades från firestore")
-                }
-                .addOnFailureListener {
-                    println("!!! Tomma banan raderades INTE!")
-                }
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
         }

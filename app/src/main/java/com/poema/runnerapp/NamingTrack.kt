@@ -30,7 +30,7 @@ class NamingTrack : AppCompatActivity() {
 
         val timeUnit = intent.getIntExtra("Time", 0)
         val distance: Double = intent.getDoubleExtra("Distance", 0.0)
-        docUid = intent.getStringExtra("docUid")
+        docUid = intent.getStringExtra("docUid")!!
         val index = intent.getIntExtra("ind", 0)
         val resultTimeText = makeTimeStr(timeUnit)
         val saveButton = findViewById<Button>(R.id.save)
@@ -52,8 +52,7 @@ class NamingTrack : AppCompatActivity() {
         }
         cancelButton.setOnClickListener {
             eraseMapObjects(index)
-            //val intent = Intent(this, MainActivity::class.java)
-            //startActivity(intent)
+
         }
     }
 
@@ -109,7 +108,7 @@ class NamingTrack : AppCompatActivity() {
             Toast.LENGTH_LONG).show(); goToStartPage()
     }
     fun goToStartPage(){
-        val intent = Intent(this, StartPageActivity::class.java)
+        val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
     }
 }
