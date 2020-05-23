@@ -69,6 +69,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private val markerList = mutableListOf<Marker>()
     private var sec: Int = 0
     private var lost = false
+    private var length = 0.0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,6 +81,11 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         //ta emot position
 
         val position = intent.getIntExtra("position", 0)
+        if (Datamanager.maps[position].length != null) {
+        length = Datamanager.maps[position].length!!
+        }
+        val tvLength = findViewById<TextView>(R.id.tvDistanceLeft)
+        tvLength.text = String.format("%.0f", (length))
         if (Datamanager.maps[position].name != null) {
             trackName = Datamanager.maps[position].name!!
         }
@@ -347,6 +353,10 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             val aot = findViewById<TextView>(R.id.aot)
             val aotValue = findViewById<TextView>(R.id.aotValue)
             val ghostAccDistance = NewDataManager.newLocationObjects[timeUnit].accDistance
+            val distanceLeft = findViewById<TextView>(R.id.tvDistanceLeft)
+           // val length = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance!!
+            val distanceLeftStr = String.format("%.0f", (length - totalDistance))
+            distanceLeft.text = distanceLeftStr
             if (totalDistance < ghostAccDistance!!) {
                 aot.setTextColor(Color.RED)
                 aot.text = "trailing"
@@ -515,7 +525,10 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             println("!!! Sedan:   $locationObject")
             val lt1 = locationObject.locLatLng!!.latitude
             val lg1 = locationObject.locLatLng!!.longitude
-            val marker = map.addMarker(MarkerOptions().position(LatLng(lt1, lg1)).visible(false))
+
+            val icon = BitmapDescriptorFactory.fromResource(R.drawable.mymarker)
+
+            val marker = map.addMarker(MarkerOptions().position(LatLng(lt1, lg1)).icon(icon).visible(false))
             markerList.add(marker)
         }
         for (locationObject in ObjectDataManager.locationObjects) {

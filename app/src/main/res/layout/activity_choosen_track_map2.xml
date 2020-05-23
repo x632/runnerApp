@@ -23,13 +23,13 @@
     <TextView
         android:id="@+id/aotValue"
         android:layout_width="wrap_content"
-        android:layout_height="34dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="6dp"
         android:text="@string/distancevalue"
         android:textAlignment="center"
         android:textColor="@color/colorBTextGreen"
-        android:textSize="20sp"
+        android:textSize="24sp"
         app:layout_constraintStart_toEndOf="@+id/textView8"
         app:layout_constraintTop_toBottomOf="@+id/timer" />
 
@@ -63,7 +63,7 @@
     <TextView
         android:id="@+id/aheadortrailing"
         android:layout_width="wrap_content"
-        android:layout_height="30dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="80dp"
         android:layout_marginTop="10dp"
         android:text="You are"
@@ -139,7 +139,40 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/aotValue"
-        tools:context=".ChosenTrackMapActivity"
-        />
+        app:layout_constraintTop_toBottomOf="@+id/textView2"
+        tools:context=".ChosenTrackMapActivity" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:text="You have approx."
+        android:textColor="@color/cardview_light_background"
+        android:textSize="20sp"
+        app:layout_constraintBaseline_toBaselineOf="@+id/tvDistanceLeft"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/tvDistanceLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="5dp"
+        android:text="TextView"
+        android:textColor="@color/colorBTextGreen"
+        android:textSize="20sp"
+        app:layout_constraintStart_toEndOf="@+id/textView2"
+        app:layout_constraintTop_toBottomOf="@+id/textView8" />
+
+    <TextView
+        android:id="@+id/textView10"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:text="meters left"
+        android:textColor="@color/cardview_light_background"
+        android:textSize="20sp"
+        app:layout_constraintBaseline_toBaselineOf="@+id/tvDistanceLeft"
+        app:layout_constraintStart_toEndOf="@+id/tvDistanceLeft" />
 </androidx.constraintlayout.widget.ConstraintLayout>
