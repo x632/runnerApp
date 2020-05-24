@@ -354,7 +354,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             val aotValue = findViewById<TextView>(R.id.aotValue)
             val ghostAccDistance = NewDataManager.newLocationObjects[timeUnit].accDistance
             val distanceLeft = findViewById<TextView>(R.id.tvDistanceLeft)
-           // val length = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance!!
             val distanceLeftStr = String.format("%.0f", (length - totalDistance))
             distanceLeft.text = distanceLeftStr
             if (totalDistance < ghostAccDistance!!) {
