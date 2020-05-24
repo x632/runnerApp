@@ -59,7 +59,7 @@ class TracksActivity : AppCompatActivity() {
         /*if (eraseSignal){
             adapter!!.removeTrack(position)
         }*/
-        //koppla ihop adaptern med recyclerview:n
+
         recyclerView.adapter = adapter
 
 
@@ -68,7 +68,7 @@ class TracksActivity : AppCompatActivity() {
             val timeStamp = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")
                 .withZone(ZoneOffset.ofHours(+2)).format(Instant.now())
             //val a = Map("", distance, name, timestr, timeStamp)
-            //updatera mappen som skapades som tom tidigare, med de rätta värdena.
+            //updaterar mappen som skapades som tom tidigare, med de rätta värdena.
             db.collection("users").document(myUserUid).collection("maps").document(docUid2!!)
                 .update("id", "")
                 .addOnSuccessListener {
