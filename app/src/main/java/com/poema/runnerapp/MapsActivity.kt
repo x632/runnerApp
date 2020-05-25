@@ -21,6 +21,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.GeoPoint
 import java.text.SimpleDateFormat
 import java.util.*
@@ -61,6 +62,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
         val mapFragment = supportFragmentManager
@@ -68,10 +70,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         mapFragment.getMapAsync(this)
 
         db = FirebaseFirestore.getInstance()
+        val settings = FirebaseFirestoreSettings.Builder()
+            .setTimestampsInSnapshotsEnabled(true)
+            .build()
+        db.firestoreSettings = settings
         auth = FirebaseAuth.getInstance()
         if (auth!!.currentUser != null) {
             myUserUid = auth!!.currentUser!!.uid
         }
+
+
+                // ...
+
 
 
         val stopButton = findViewById<Button>(R.id.stopButton)
