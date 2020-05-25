@@ -56,6 +56,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     private var auth: FirebaseAuth? = null
     var docUid = ""
     private var myUserUid = ""
+    private var havePressedStart = true
+    private var havePressedStop = true
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,7 +77,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         val stopButton = findViewById<Button>(R.id.stopButton)
         stopButton.setOnClickListener {
 
-            if (timerOn != null) {
+            if (timerOn != null && havePressedStop == true) {
+                havePressedStop = false
                 startTimer(false)
                 onPause()
                 val intent = Intent(this, NamingTrack::class.java)
@@ -90,7 +93,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         val startButton = findViewById<Button>(R.id.startbutton)
         startButton.setOnClickListener {
 
-            if (timerOn == null) {
+            if (timerOn == null && havePressedStart == true) {
+                havePressedStart = false
                 val myDate = getCurrentDateTime()
                 val dateInString = myDate.toString("yyyy-MM-dd HH:mm:ss.SSSSSS")
 
@@ -208,11 +212,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         task.addOnFailureListener { e ->
             // 6
             if (e is ResolvableApiException) {
-                // Location settings are not satisfied, but this can be fixed
-                // by showing the user a dialog.
+
                 try {
-                    // Show the dialog by calling startResolutionForResult(),
-                    // and check the result in onActivityResult().
+
                     e.startResolutionForResult(
                         this@MapsActivity,
                         REQUEST_CHECK_SETTINGS
@@ -253,7 +255,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             type = polyline.tag.toString()
         }
         when (type) {
-            "A" ->                 // Use a custom bitmap as the cap at the start of the line.
+            "A" ->
             {
                 polyline.color = COLOR_GREEN_ARGB
                 //polyline.startCap = RoundCap()
@@ -286,7 +288,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         }
         map.isMyLocationEnabled = true
         fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
-            // Got last known location. In some rare situations this can be null.
+
             if (location != null) {
                 lastLocation = location
                 val currentLatLng = LatLng(location.latitude, location.longitude)

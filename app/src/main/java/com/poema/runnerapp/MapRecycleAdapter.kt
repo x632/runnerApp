@@ -59,24 +59,24 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
         val a = Datamanager.maps[position]
         if (a.id != null) {
             b = (a.id!!)
-        }                                    // uid:t på map:pen ifråga -> ladda ner collection av mapObjects som hör till den map:pen.
+        }                                    // uid:t på map:pen ifråga -> laddar ner collection av mapObjects som hör till den map:pen.
 
         val docRef1 = db.collection("users").document(myUserUid).collection("maps").document(b)
             .collection("mapObjects").orderBy(
                 "time", Query.Direction.DESCENDING
             )
         docRef1.get().addOnSuccessListener { documentSnapshot ->
-            ObjectDataManager.locationObjects.clear()                                //töm ObjectDatamanager...
+            ObjectDataManager.locationObjects.clear()                                //tömmer ObjectDatamanager...
             for (document in documentSnapshot.documents) {
                 val newLocationObject = document.toObject(LocationObject::class.java)
 
                 if (newLocationObject != null) {
                     newLocationObject.id =
-                        (document.id)                         //....lägg sedan till dessa mapObjects (som kommer från firestore till objektdatamanager med firestore id
+                        (document.id)                         //....lägger sedan till dessa mapObjects (som kommer från firestore till objektdatamanager med firestore id
                     ObjectDataManager.locationObjects.add(newLocationObject)
                 }
             }
-            for (x in 0 until ObjectDataManager.locationObjects.size) {      //skapa därefter en lista med bara dessa firestore id:n
+            for (x in 0 until ObjectDataManager.locationObjects.size) {      //skapar därefter en lista med bara dessa firestore id:n
                 val a = ObjectDataManager.locationObjects[x]
                 idList.add("${a.id}")
             }
@@ -87,7 +87,7 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
         }
     }
 
-    private fun indexingFunction() {                     //gå igenom id-listan och aktivera radering av MapObjects för mappen...
+    private fun indexingFunction() {                     //går igenom id-listan och aktivera radering av MapObjects för mappen...
         mapObjectUidIndex++
         if (mapObjectUidIndex <= idList.size-1) {
             deleteLocationObjects(mapObjectUidIndex)
@@ -98,7 +98,7 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
         db.collection("users").document(myUserUid).collection("maps").document(b).collection("mapObjects").document(idList[mapObjectUidIndex])
             .delete() .addOnSuccessListener {
                 Log.d(TAG, "!!! Document successfully deleted!")
-               indexingFunction()    // gå tillbaka till indexingfunction när objektet är raderat - inga trådkrockar!
+               indexingFunction()    // går tillbaka till indexingfunction när objektet är raderat - inga trådkrockar!
             }
                 .addOnFailureListener {
                         e -> Log.w(TAG, "!!! Error deleting document", e)

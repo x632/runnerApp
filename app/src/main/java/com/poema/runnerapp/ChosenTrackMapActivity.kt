@@ -70,6 +70,8 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private var sec: Int = 0
     private var lost = false
     private var length = 0.0
+    private var havePressedStart = true
+    private var havePressedStop = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -105,12 +107,12 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 handler.postDelayed(this, delay.toLong())
             }
         }, delay.toLong())
-        //Skriv in tracknamnet i rubriken
+        //Skriver in tracknamnet i rubriken
 
         val header = findViewById<TextView>(R.id.header)
         header.text = trackName
 
-        //initialisera firestore och auth
+        //initialiserar firestore och auth
 
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
@@ -119,10 +121,11 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         }
 
 
-        //fixa stopknappen
+        //fixar stopknappen
         val stopButton = findViewById<Button>(R.id.stopbtn)
         stopButton.setOnClickListener {
-            if (timerOn != null) {
+            if (timerOn != null && havePressedStop == true) {
+                havePressedStop = false
                 startTimer(false)
                 onPause()
                 println("!!! accumulerad distans:  ${NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance}")
@@ -145,15 +148,16 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 }
             }
         }
-        //fixa startknappen
+        //fixar startknappen
+
         val startButton = findViewById<Button>(R.id.startbtn)
         startButton.setOnClickListener {
-
-            if (timerOn == null) {
+            if (timerOn == null && havePressedStart == true) {
+                havePressedStart = false
                 val myDate = getCurrentDateTime()
                 val dateInString = myDate.toString("yyyy-MM-dd HH:mm:ss.SSSSSS")
 
-                // Lägg till tom bana i firestore
+                // Lägger till tom bana i firestore
 
                 val a = Map("", 0.0, "", "", dateInString)
                 println("!!! $a")
@@ -412,7 +416,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     }
 
     override fun onBackPressed() {
-        // ser till så man inte kan lämna sidan om timern är på - om den inte är på så raderas den tomma banan från firestore och man lämnar sidan
+        // ser till så man inte kan lämna sidan om timern är på
         if (timerOn == null) {
             val intent = Intent(this, TracksActivity::class.java)
             startActivity(intent)
@@ -423,20 +427,20 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         val a = Datamanager.maps[position]
         if (a.id != null) {
             b = (a.id!!)
-        }                                    // uid:t på map:pen ifråga -> ladda ner collection av mapObjects som hör till den map:pen.
+        }                                    // uid:t på map:pen ifråga -> laddar ner collection av mapObjects som hör till den map:pen.
 
         val docRef1 = db.collection("users").document(myUserUid).collection("maps").document(b)
             .collection("mapObjects").orderBy(
                 "time", Query.Direction.ASCENDING
             )
         docRef1.get().addOnSuccessListener { documentSnapshot ->
-            ObjectDataManager.locationObjects.clear()                                //töm ObjectDatamanager...
+            ObjectDataManager.locationObjects.clear()                                //tömmer ObjectDatamanager...
             for (document in documentSnapshot.documents) {
                 val newLocationObject = document.toObject(LocationObject::class.java)
 
                 if (newLocationObject != null) {
                    newLocationObject.id =
-                       (document.id)                         //....lägg sedan till dessa mapObjects (som kommer från firestore till objektdatamanager)
+                       (document.id)                         //....lägger sedan till dessa mapObjects (som kommer från firestore till objektdatamanager)
                     ObjectDataManager.locationObjects.add(newLocationObject)
                 }
             }
@@ -505,7 +509,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 lngResult = lngPieces
                 accDistResult = accDistPieces
                 timeResult = time1 + ind
-            //skapa de framkalkylerade objekten och lägg in i newdatamanager
+            //skapar de framkalkylerade objekten och lägger in i newdatamanager
                 val locGeo = GeoPoint(latResult, lngResult)
                 val locObj = LocationObject("$ind", locGeo, accDistResult, timeResult)
                 NewDataManager.newLocationObjects.add(locObj)
@@ -525,7 +529,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             val lt1 = locationObject.locLatLng!!.latitude
             val lg1 = locationObject.locLatLng!!.longitude
 
-            val icon = BitmapDescriptorFactory.fromResource(R.drawable.mymarker)
+            val icon = BitmapDescriptorFactory.fromResource(R.drawable.testmarkeriiliten)
 
             val marker = map.addMarker(MarkerOptions().position(LatLng(lt1, lg1)).icon(icon).visible(false))
             markerList.add(marker)

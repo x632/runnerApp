@@ -87,7 +87,7 @@ class DefeatedGhostActivity : AppCompatActivity() {
             Toast.LENGTH_LONG
         ).show()
     }
-    //radera gamla banans locationsobjects
+    //raderar gamla banans locationsobjects
     private fun deleteOldMapObjects(index: Int) {
         val b = Datamanager.maps[position].id!!
         for (i in 1..index) {
