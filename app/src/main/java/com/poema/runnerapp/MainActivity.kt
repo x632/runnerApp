@@ -13,7 +13,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 class MainActivity : AppCompatActivity() {
 
     lateinit var db: FirebaseFirestore
-    private var auth: FirebaseAuth? = null
+    private lateinit var auth: FirebaseAuth
     private var myUserUid = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,16 +22,16 @@ class MainActivity : AppCompatActivity() {
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
 
-        if (auth!!.currentUser != null) {
-            myUserUid = auth!!.currentUser!!.uid
+        if (auth.currentUser != null) {
+            myUserUid = auth.currentUser!!.uid
 
         }else{
-            auth!!.signInAnonymously()
+            auth.signInAnonymously()
                 .addOnCompleteListener(this) { task ->
                     myUserUid = if (task.isSuccessful) {
                         println("!!! signInAnonymously:success")
-                        val user = auth!!.currentUser
-                        auth!!.currentUser?.uid!!
+                        val user = auth.currentUser
+                        auth.currentUser?.uid!!
 
                     } else {
                         // If sign in fails, display a message to the user.

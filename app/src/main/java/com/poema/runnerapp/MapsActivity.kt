@@ -54,7 +54,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     private var location1 : Location? = null
     private var location2 : Location? = null
     lateinit var db: FirebaseFirestore
-    private var auth: FirebaseAuth? = null
+    private lateinit var auth: FirebaseAuth
     var docUid = ""
     private var myUserUid = ""
     private var havePressedStart = true
@@ -75,8 +75,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             .build()
         db.firestoreSettings = settings
         auth = FirebaseAuth.getInstance()
-        if (auth!!.currentUser != null) {
-            myUserUid = auth!!.currentUser!!.uid
+        if (auth.currentUser != null) {
+            myUserUid = auth.currentUser!!.uid
         }
 
 

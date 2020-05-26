@@ -116,8 +116,8 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
 
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
-        if (auth!!.currentUser != null) {
-            myUserUid = auth!!.currentUser!!.uid
+        if (auth.currentUser != null) {
+            myUserUid = auth.currentUser!!.uid
         }
 
 
@@ -131,9 +131,9 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 println("!!! accumulerad distans:  ${NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance}")
                 var ghostGoalDistance = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance
                 if (ghostGoalDistance != null) {
-                    val a = 0.04 * ghostGoalDistance  //procentsatsen för när användaren ska anses vara tillräckligt nära mål mätt i ackumulerad distans
-                                                                // för att tiden ska räknas som rekord.
-                    if (timeUnit < markerList.size && totalDistance > ghostGoalDistance - a) {
+                    val a = 0.1 * ghostGoalDistance  //procentsatsen för när användaren ska anses vara tillräckligt nära mål mätt i ackumulerad distans
+                                                                // för att tiden ska kunna räknas som ev rekord.
+                    if (timeUnit < markerList.size && totalDistance > (ghostGoalDistance - a)) {
                         // vad ska hända när man vunnit
                         val intent = Intent(this, DefeatedGhostActivity::class.java)
                         intent.putExtra("Time", timeUnit)

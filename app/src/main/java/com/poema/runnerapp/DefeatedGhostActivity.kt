@@ -26,8 +26,8 @@ class DefeatedGhostActivity : AppCompatActivity() {
         setContentView(R.layout.activity_defeated_ghost)
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
-        if (auth!!.currentUser != null) {
-            myUserUid = auth!!.currentUser!!.uid
+        if (auth.currentUser != null) {
+            myUserUid = auth.currentUser!!.uid
         }
 
         val timeUnit = intent.getIntExtra("Time", 0)

@@ -30,8 +30,8 @@ class TracksActivity : AppCompatActivity() {
 
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
-        if (auth!!.currentUser != null) {
-            myUserUid = auth!!.currentUser!!.uid
+        if (auth.currentUser != null) {
+            myUserUid = auth.currentUser!!.uid
         }
         val timeUnit = intent.getIntExtra("time2", -1)
         val name = intent.getStringExtra("name2")
