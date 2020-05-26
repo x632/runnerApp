@@ -263,7 +263,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             locationUpdateState = true
             if (timerOn != null) {
                 startLocationUpdates()
-                //startGhost()
             }
         }
         task.addOnFailureListener { e ->
@@ -388,7 +387,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         if (myLocLatLngList.size > 1) {
 
             val options = PolylineOptions()
-            options.color(Color.GREEN)
+            options.color(Color.RED)
             options.width(7f)
 
             for (LatLng in myLocLatLngList) {

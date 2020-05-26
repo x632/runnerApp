@@ -1,18 +1,15 @@
 package com.poema.runnerapp
 
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import java.time.Instant
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 class TracksActivity : AppCompatActivity() {
@@ -20,14 +17,13 @@ class TracksActivity : AppCompatActivity() {
     var mapsUidIndex = -1
     private var idList = mutableListOf<String>()
     lateinit var db: FirebaseFirestore
-    private var auth: FirebaseAuth? = null
+    private lateinit var auth: FirebaseAuth
     lateinit var recyclerView: RecyclerView
     var createdTrack: Boolean = false
     var adapter: MapRecycleAdapter? = null
     var docUid = ""
     var myUserUid = ""
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_tracks)
@@ -56,18 +52,14 @@ class TracksActivity : AppCompatActivity() {
 
         adapter = MapRecycleAdapter(this, Datamanager.maps, myUserUid)
 
-        /*if (eraseSignal){
-            adapter!!.removeTrack(position)
-        }*/
-
         recyclerView.adapter = adapter
 
 
         if (createdTrack) {
 
-            val timeStamp = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS")
-                .withZone(ZoneOffset.ofHours(+2)).format(Instant.now())
-            //val a = Map("", distance, name, timestr, timeStamp)
+            val myDate = getCurrentDateTime()
+            val timeStamp = myDate.toString("yyyy-MM-dd HH:mm:ss.SSSSSS")
+
             //updaterar mappen som skapades som tom tidigare, med de rätta värdena.
             db.collection("users").document(myUserUid).collection("maps").document(docUid2!!)
                 .update("id", "")
@@ -117,7 +109,13 @@ class TracksActivity : AppCompatActivity() {
                 getData()
         }
     }
-
+    private fun getCurrentDateTime(): Date {
+        return Calendar.getInstance().time
+    }
+    private fun Date.toString(format: String, locale: Locale = Locale.getDefault()): String {
+        val formatter = SimpleDateFormat(format, locale)
+        return formatter.format(this)
+    }
     fun makeTimeStr(timeUnit: Int): String {
         val hours = timeUnit / 36000
         val minutes = timeUnit % 36000 / 60

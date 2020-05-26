@@ -14,7 +14,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 class DefeatedGhostActivity : AppCompatActivity() {
 
     lateinit var db: FirebaseFirestore
-    private var auth: FirebaseAuth? = null
+    private lateinit var auth: FirebaseAuth
     private var myUserUid = ""
     private lateinit var docUid : String
     var position = 0
