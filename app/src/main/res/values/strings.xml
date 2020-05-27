@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">runnerApp</string>
+    <string name="app_name">RunnerApp</string>
     <string name="button">Previous tracks</string>
     <string name="button2">Record track</string>
     <string name="button3">Start</string>
@@ -20,22 +20,15 @@
     <string name="savebtn">Save track</string>
     <string name="aot">ahead</string>
     <string name="recyclerheader">Your tracks</string>
-    <string name="title_activity_login">Sign in</string>
-    <string name="prompt_email">Email</string>
-    <string name="prompt_password">Password</string>
     <string name="action_sign_in">Sign in or register</string>
     <string name="action_sign_in_short">Sign in</string>
     <string name="welcome">"Welcome !"</string>
     <string name="invalid_username">Not a valid username</string>
-    <string name="invalid_password">Password must be >5 characters</string>
     <string name="login_failed">"Login failed"</string>
-    <string name="loginButtonText">LOGIN</string>
-    <string name="loginButton">LOGIN</string>
-    <string name="createButton">CREATE ACCOUNT</string>
     <string name="password">password</string>
     <string name="title_activity_maps">Map</string>
     <string name="title_activity_chosen_track_map2">Map</string>
-    <string name="title_activity_choosen_track_map2">chosen track</string>
+    <string name="title_activity_choosen_track_map2">Chosen track</string>
     <string name="title_activity_maps2">Map</string>
     <string name="Update">UPDATE</string>
 </resources>

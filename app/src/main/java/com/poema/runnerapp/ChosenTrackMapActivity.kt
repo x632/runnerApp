@@ -72,6 +72,8 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private var length = 0.0
     private var havePressedStart = true
     private var havePressedStop = true
+    private var myLocationsList = mutableListOf<Location>()
+    private var withinGoalRadius : Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -132,8 +134,9 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 var ghostGoalDistance = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance
                 if (ghostGoalDistance != null) {
                     val a = 0.1 * ghostGoalDistance  //procentsatsen för när användaren ska anses vara tillräckligt nära mål mätt i ackumulerad distans
-                                                                // för att tiden ska kunna räknas som ev rekord.
-                    if (timeUnit < markerList.size && totalDistance > (ghostGoalDistance - a)) {
+                                                                // för att tiden ska kunna räknas som ev rekord. Dessutom ska den befinna sig högst 30m från startpunkten
+                                                                // när senaste location togs (4s intervaller)
+                    if (timeUnit < markerList.size && totalDistance > (ghostGoalDistance - a) && myLocationsList[0].distanceTo(myLocationsList[index-1]) < 30.0) {
                         // vad ska hända när man vunnit
                         val intent = Intent(this, DefeatedGhostActivity::class.java)
                         intent.putExtra("Time", timeUnit)
@@ -336,6 +339,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     }
 
     private fun doSomethingWithLastLocation(location: Location) {
+        myLocationsList.add(location)
 
         //skapar ny location och senaste location - kollar distansen mellan dem, adderar till totaldistance.
 
