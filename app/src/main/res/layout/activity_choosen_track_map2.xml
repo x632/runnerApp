@@ -10,13 +10,13 @@
 
     <Button
         android:id="@+id/stopbtn"
-        android:layout_width="170dp"
+        android:layout_width="160dp"
         android:layout_height="60dp"
-        android:layout_marginEnd="17dp"
+        android:layout_marginEnd="30dp"
         android:background="@layout/roundedcorners"
         android:text="@string/button4"
         android:textColor="@color/colorBTextRed"
-        android:textSize="30sp"
+        android:textSize="20sp"
         app:layout_constraintBaseline_toBaselineOf="@+id/startbtn"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -25,40 +25,38 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
-        android:layout_marginTop="6dp"
         android:text="@string/distancevalue"
         android:textAlignment="center"
         android:textColor="@color/colorBTextGreen"
         android:textSize="24sp"
-        app:layout_constraintStart_toEndOf="@+id/textView8"
-        app:layout_constraintTop_toBottomOf="@+id/timer" />
+        app:layout_constraintBaseline_toBaselineOf="@+id/textView8"
+        app:layout_constraintStart_toEndOf="@+id/textView8" />
 
     <Button
         android:id="@+id/startbtn"
-        android:layout_width="170dp"
+        android:layout_width="160dp"
         android:layout_height="60dp"
-        android:layout_marginStart="17dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="10dp"
         android:background="@layout/roundedcorners"
         android:text="@string/button3"
         android:textColor="@color/colorBTextGreen"
-        android:textSize="30sp"
+        android:textSize="20sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView5" />
 
     <TextView
         android:id="@+id/timer"
         android:layout_width="300dp"
-        android:layout_height="70dp"
-        android:layout_marginTop="5dp"
+        android:layout_height="60dp"
         android:text="@string/timervalue"
         android:textAlignment="center"
         android:textColor="@color/colorTVwhite"
         android:textSize="50sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.43"
+        app:layout_constraintHorizontal_bias="0.494"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/stopbtn" />
+        app:layout_constraintTop_toBottomOf="@+id/startbtn" />
 
     <TextView
         android:id="@+id/aheadortrailing"
@@ -92,12 +90,12 @@
         android:layout_width="327dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="30dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="6dp"
         android:layout_marginEnd="30dp"
         android:text="Before starting the race against your ghost make sure you have the same starting position!"
         android:textAlignment="center"
         android:textColor="@color/colorTVwhite"
-        android:textSize="18sp"
+        android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/header" />
@@ -106,26 +104,23 @@
         android:id="@+id/aot"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="6dp"
+        android:layout_marginStart="5dp"
         android:text="@string/aot"
         android:textColor="@color/colorBTextGreen"
         android:textSize="24sp"
-        app:layout_constraintStart_toEndOf="@+id/aheadortrailing"
-        app:layout_constraintTop_toBottomOf="@+id/timer" />
+        app:layout_constraintBaseline_toBaselineOf="@+id/aheadortrailing"
+        app:layout_constraintStart_toEndOf="@+id/aheadortrailing" />
 
     <TextView
         android:id="@+id/textView8"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
-        android:layout_marginTop="10dp"
         android:text="by"
         android:textColor="@color/colorTVwhite"
         android:textSize="20sp"
-        app:layout_constraintEnd_toStartOf="@+id/aotValue"
-        app:layout_constraintStart_toEndOf="@+id/aot"
-        app:layout_constraintTop_toBottomOf="@+id/timer" />
+        app:layout_constraintBaseline_toBaselineOf="@+id/aot"
+        app:layout_constraintStart_toEndOf="@+id/aot" />
 
     <fragment
         android:id="@+id/map"
@@ -139,7 +134,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView2"
+        app:layout_constraintTop_toBottomOf="@+id/switch1"
         tools:context=".ChosenTrackMapActivity" />
 
     <TextView
@@ -175,4 +170,21 @@
         android:textSize="20sp"
         app:layout_constraintBaseline_toBaselineOf="@+id/tvDistanceLeft"
         app:layout_constraintStart_toEndOf="@+id/tvDistanceLeft" />
+
+    <Switch
+        android:id="@+id/switch1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:background="@color/colorBGp1"
+        android:checked="true"
+        android:showText="false"
+        android:text="Automatic zoom and position update  "
+        android:textColor="@color/cardview_light_background"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.493"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView2"
+        tools:checked="false" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.util.Log
 import android.widget.Button
+import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -74,6 +75,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private var havePressedStop = true
     private var myLocationsList = mutableListOf<Location>()
     private var withinGoalRadius : Boolean = false
+    private var zoomUpdate = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -120,6 +122,17 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         auth = FirebaseAuth.getInstance()
         if (auth.currentUser != null) {
             myUserUid = auth.currentUser!!.uid
+        }
+
+        //fixar switchknappen
+        val switchBtn = findViewById<Switch>(R.id.switch1)
+        switchBtn.setOnCheckedChangeListener{_, isChecked ->
+            if(isChecked) {
+               zoomUpdate = true
+            }
+            else {
+                zoomUpdate = false
+            }
         }
 
 
@@ -402,9 +415,10 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         }
 
         // uppdaterar kameran till nuvarande position
-
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 17f))
-
+        val switch = findViewById<Switch>(R.id.switch1)
+        if (zoomUpdate == true) {
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 17f))
+        }
         //skapar och sparar LocationObjects till firestore till den tomma map:pen.
         val locGeo = GeoPoint(location.latitude, location.longitude)
         val a = LocationObject("", locGeo, totalDistance, timeUnit)
