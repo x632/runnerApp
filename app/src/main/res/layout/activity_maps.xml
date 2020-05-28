@@ -11,26 +11,26 @@
 
     <Button
         android:id="@+id/startbutton"
-        android:layout_width="170dp"
+        android:layout_width="160dp"
         android:layout_height="60dp"
-        android:layout_marginStart="20dp"
+        android:layout_marginStart="30dp"
         android:layout_marginTop="10dp"
         android:background="@layout/roundedcorners"
         android:text="@string/button3"
         android:textColor="@color/colorBTextGreen"
-        android:textSize="25sp"
+        android:textSize="20sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/header" />
 
     <Button
         android:id="@+id/stopButton"
-        android:layout_width="170dp"
+        android:layout_width="160dp"
         android:layout_height="60dp"
-        android:layout_marginEnd="20dp"
+        android:layout_marginEnd="30dp"
         android:background="@layout/roundedcorners"
         android:text="@string/button4"
         android:textColor="@color/colorBTextRed"
-        android:textSize="25sp"
+        android:textSize="20sp"
         app:layout_constraintBaseline_toBaselineOf="@+id/startbutton"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -72,14 +72,14 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
-        android:id="@+id/avgspeed"
+        android:id="@+id/speed"
         android:layout_width="165dp"
         android:layout_height="34dp"
         android:layout_marginStart="35dp"
         android:text="@string/Speed"
         android:textColor="@color/colorTVwhite"
         android:textSize="18sp"
-        app:layout_constraintBaseline_toBaselineOf="@+id/avgspeedvalue"
+        app:layout_constraintBaseline_toBaselineOf="@+id/speedvalue"
         app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
@@ -94,11 +94,11 @@
         android:textColor="@color/colorBTextGreen"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/avgspeed"
+        app:layout_constraintStart_toEndOf="@+id/speed"
         app:layout_constraintTop_toBottomOf="@+id/timer" />
 
     <TextView
-        android:id="@+id/avgspeedvalue"
+        android:id="@+id/speedvalue"
         android:layout_width="wrap_content"
         android:layout_height="34dp"
         android:layout_marginStart="51dp"
@@ -108,8 +108,46 @@
         android:textColor="@color/colorBTextGreen"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/avgspeed"
+        app:layout_constraintStart_toEndOf="@+id/speed"
         app:layout_constraintTop_toBottomOf="@+id/distancevalue" />
+
+    <TextView
+        android:id="@+id/tvAvgSpeedValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="51dp"
+        android:layout_marginEnd="10dp"
+        android:text="@string/_0m_sec"
+        android:textColor="@color/colorBTextGreen"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/tvAvgSpeed"
+        app:layout_constraintTop_toBottomOf="@+id/speedvalue" />
+
+    <Switch
+        android:id="@+id/mySwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:checked="true"
+        android:showText="false"
+        android:text="@string/move_map_and_zoom_automatically"
+        android:textColor="@color/design_default_color_on_primary"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvAvgSpeed" />
+
+    <TextView
+        android:id="@+id/tvAvgSpeed"
+        android:layout_width="165dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="35dp"
+        android:text="@string/average_speed"
+        android:textColor="@color/colorTVwhite"
+        android:textSize="18sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/speed" />
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/map"
@@ -117,12 +155,18 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="10dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="15dp"
         android:layout_marginEnd="10dp"
         android:layout_marginBottom="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/avgspeed"
+        app:layout_constraintTop_toBottomOf="@+id/mySwitch"
         tools:context=".MapsActivity" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

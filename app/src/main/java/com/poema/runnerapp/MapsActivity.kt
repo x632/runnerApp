@@ -8,6 +8,7 @@ import android.graphics.Color
 import android.location.Location
 import android.os.Bundle
 import android.widget.Button
+import android.widget.Switch
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -21,7 +22,6 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.GeoPoint
 import java.text.SimpleDateFormat
 import java.util.*
@@ -44,8 +44,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     private var timerStarted = false
     private var timerOn: Timer? = null
     private var timeUnit = -1
-    private val COLOR_GREEN_ARGB = -0xc771c4
-    private val COLOR_RED_ARGB = -0xff000
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var lastLocation: Location
     private var totalDistance = 0.0
@@ -59,7 +57,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     private var myUserUid = ""
     private var havePressedStart = true
     private var havePressedStop = true
-
+    private var zoomUpdate = true
+    private var myLocationsList = mutableListOf<Location>()
+    private var avgSpeed = 0.0
+    private var statAvgSpeed = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -70,18 +71,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         mapFragment.getMapAsync(this)
 
         db = FirebaseFirestore.getInstance()
-        val settings = FirebaseFirestoreSettings.Builder()
-            .setTimestampsInSnapshotsEnabled(true)
-            .build()
-        db.firestoreSettings = settings
         auth = FirebaseAuth.getInstance()
         if (auth.currentUser != null) {
             myUserUid = auth.currentUser!!.uid
         }
 
-
-                // ...
-
+        //fixar switchknappen
+        val mySwitchBtn = findViewById<Switch>(R.id.mySwitch)
+        mySwitchBtn.setOnCheckedChangeListener{_, isChecked ->
+            zoomUpdate = isChecked
+        }
 
 
         val stopButton = findViewById<Button>(R.id.stopButton)
@@ -197,30 +196,25 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         )
     }
     private fun createLocationRequest() {
-       // 1
+
         locationRequest = LocationRequest()
-        // 2
         locationRequest.interval = 5000
-        // 3
         locationRequest.fastestInterval = 4000
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
 
         val builder = LocationSettingsRequest.Builder()
             .addLocationRequest(locationRequest)
 
-        // 4
         val client = LocationServices.getSettingsClient(this)
         val task = client.checkLocationSettings(builder.build())
 
-        // 5
         task.addOnSuccessListener {
             locationUpdateState = true
             if(timerOn != null){
             startLocationUpdates()}
-
         }
         task.addOnFailureListener { e ->
-            // 6
+
             if (e is ResolvableApiException) {
 
                 try {
@@ -246,43 +240,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         }
 
     }
-    // 2
     override fun onPause() {
         super.onPause()
         fusedLocationClient.removeLocationUpdates(locationCallback)
     }
-    // 3
     public override fun onResume() {
         super.onResume()
         if (timerOn!=null) {  //!locationUpdateState
            startLocationUpdates()
         }
     }
-    private fun stylePolyline(polyline: Polyline) {
-        var type = ""
-        // Get the data object stored with the polyline.
-        if (polyline.tag != null) {
-            type = polyline.tag.toString()
-        }
-        when (type) {
-            "A" ->
-            {
-                polyline.color = COLOR_GREEN_ARGB
-                //polyline.startCap = RoundCap()
-                //polyline.endCap = RoundCap()
-            }
 
-            "B" -> {
-                polyline.color = COLOR_RED_ARGB
-                //polyline.startCap = RoundCap()
-               // polyline.endCap = CustomCap(
-                 //   BitmapDescriptorFactory.fromResource(R.drawable.ic_arrow)
-                //)
-            }
-        }
-        polyline.width = 8.toFloat()
-        polyline.jointType = JointType.ROUND
-    }
     private fun setUpMap() {
         if (ActivityCompat.checkSelfPermission(
                 this,
@@ -311,11 +279,26 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     override fun onPolylineClick(p0: Polyline?) {
     }
     private fun doSomethingWithLastLocation(location:Location) {
-
+        myLocationsList.add(location)
         val speed = location.speed
-        val speedText = findViewById<TextView>(R.id.avgspeedvalue)
-        speedText.text = String.format("%.2f", speed)+" m/sec"
-       index++
+        val speedText = findViewById<TextView>(R.id.speedvalue)
+        speedText.text = String.format("%.1f", speed)+" m/sec"
+        index++
+
+        //räknar ut medelfarten
+
+        for (location in myLocationsList){
+            val a = location
+            avgSpeed += a.speed
+        }
+        avgSpeed /= index
+        val tvSpeedValue = findViewById<TextView>(R.id.tvAvgSpeedValue)
+        tvSpeedValue.text = String.format("%.1f", avgSpeed)+" m/sec"
+        statAvgSpeed = String.format("%.1f", avgSpeed)
+        avgSpeed = 0.0
+
+        //räknar ut distansen
+
         if (index%2 == 0){
             location2 = location
         } else {
@@ -324,22 +307,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             distance = location1!!.distanceTo(location2!!)
             totalDistance += distance
         }
-
-
         val currentLatLng = LatLng(lastLocation.latitude, lastLocation.longitude)
         myLocLatLngList.add(currentLatLng)
         if (myLocLatLngList.size>1){
             val options = PolylineOptions()
             options.color(Color.BLUE)
-            options.width(5f)
+            options.width(6f)
             for (LatLng in myLocLatLngList) {options.add(LatLng)}
             map.addPolyline(options)
         }
 
         val distV = findViewById<TextView>(R.id.distancevalue)
-        distV.text = String.format("%.1f", totalDistance)+" meters"
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 16f))
-
+        distV.text = String.format("%.0f", totalDistance)+" meters"
+        if (zoomUpdate) {
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 16f))
+        }
         //spara till firestore
         val locGeo =  GeoPoint(location.latitude, location.longitude)
         val a = LocationObject("",locGeo, totalDistance, timeUnit)

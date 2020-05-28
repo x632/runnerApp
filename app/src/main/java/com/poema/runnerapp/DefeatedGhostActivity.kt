@@ -66,6 +66,7 @@ class DefeatedGhostActivity : AppCompatActivity() {
             intent.putExtra("docUi", docUid)
             startActivity(intent)
         }
+        // Cancelbutton
         cancelButton.setOnClickListener {
             eraseMapObjects(index)
             goHome()

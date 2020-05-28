@@ -127,12 +127,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         //fixar switchknappen
         val switchBtn = findViewById<Switch>(R.id.switch1)
         switchBtn.setOnCheckedChangeListener{_, isChecked ->
-            if(isChecked) {
-               zoomUpdate = true
-            }
-            else {
-                zoomUpdate = false
-            }
+            zoomUpdate = isChecked
         }
 
 
@@ -146,10 +141,10 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 println("!!! accumulerad distans:  ${NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance}")
                 var ghostGoalDistance = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance
                 if (ghostGoalDistance != null) {
-                    val a = 0.1 * ghostGoalDistance  //procentsatsen för när användaren ska anses vara tillräckligt nära mål mätt i ackumulerad distans
-                                                                // för att tiden ska kunna räknas som ev rekord. Dessutom ska den befinna sig högst 30m från startpunkten
-                                                                // när senaste location togs (4s intervaller)
-                    if (timeUnit < markerList.size && totalDistance > (ghostGoalDistance - a) && myLocationsList[0].distanceTo(myLocationsList[index-1]) < 30.0) {
+                    val a = 0.1 * ghostGoalDistance     //procentsatsen för när användaren ska anses vara tillräckligt nära mål mätt i ackumulerad distans
+                                                                // för att tiden ska kunna räknas som ev rekord. Dessutom ska den befinna sig högst 60m från startpunkten
+                                                                // när senaste location togs (4-5s intervaller)
+                    if (timeUnit < markerList.size && totalDistance > (ghostGoalDistance - a) && myLocationsList[0].distanceTo(myLocationsList[index-1]) < 60.0) {
                         // vad ska hända när man vunnit
                         val intent = Intent(this, DefeatedGhostActivity::class.java)
                         intent.putExtra("Time", timeUnit)
@@ -352,6 +347,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     }
 
     private fun doSomethingWithLastLocation(location: Location) {
+       var trailing: Boolean = false
         myLocationsList.add(location)
 
         //skapar ny location och senaste location - kollar distansen mellan dem, adderar till totaldistance.
@@ -377,16 +373,18 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             val distanceLeftStr = String.format("%.0f", (length - totalDistance))
             distanceLeft.text = distanceLeftStr
             if (totalDistance < ghostAccDistance!!) {
+                trailing = true
                 aot.setTextColor(Color.RED)
                 aot.text = "trailing"
-                val str = String.format("%.1f", (ghostAccDistance - totalDistance)) + " m"
+                val str = String.format("%.0f", (ghostAccDistance - totalDistance)) + "m"
                 aotValue.setTextColor(Color.RED)
                 aotValue.text = str
             } else {
+                trailing = false
                 aot.setTextColor(Color.GREEN)
                 aot.text = "ahead"
                 aotValue.setTextColor(Color.GREEN)
-                val str = String.format("%.1f", (totalDistance - ghostAccDistance)) + " m"
+                val str = String.format("%.0f", (totalDistance - ghostAccDistance)) + "m"
                 aotValue.text = str
             }
         } else {
@@ -404,8 +402,12 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         if (myLocLatLngList.size > 1) {
 
             val options = PolylineOptions()
-            options.color(Color.RED)
-            options.width(7f)
+            if (trailing){
+                options.color(Color.RED)}
+            else{
+                options.color(Color.GREEN)
+            }
+            options.width(9f)
 
             for (LatLng in myLocLatLngList) {
                 options.add(LatLng)
@@ -415,8 +417,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         }
 
         // uppdaterar kameran till nuvarande position
-        val switch = findViewById<Switch>(R.id.switch1)
-        if (zoomUpdate == true) {
+        if (zoomUpdate) {
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 17f))
         }
         //skapar och sparar LocationObjects till firestore till den tomma map:pen.

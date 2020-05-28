@@ -31,4 +31,15 @@
     <string name="title_activity_choosen_track_map2">Chosen track</string>
     <string name="title_activity_maps2">Map</string>
     <string name="Update">UPDATE</string>
+    <string name="move_map_and_zoom_automatically">Move map and zoom automatically  </string>
+    <string name="average_speed">Average speed:</string>
+    <string name="_0m_sec">0m/sec</string>
+    <string name="you_are">You are</string>
+    <string name="trackname">Trackname</string>
+    <string name="distance_to_goal">Distance to goal:</string>
+    <string name="textview">TextView</string>
+    <string name="m">m</string>
+    <string name="before_starting_the_race_against_your_ghost_make_sure_you_have_the_same_starting_position">Before starting the race against your ghost make sure you have the same starting position!</string>
+    <string name="by">by</string>
+
 </resources>
