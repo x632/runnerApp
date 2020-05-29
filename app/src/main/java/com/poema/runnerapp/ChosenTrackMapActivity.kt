@@ -74,7 +74,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private var havePressedStart = true
     private var havePressedStop = true
     private var myLocationsList = mutableListOf<Location>()
-    private var withinGoalRadius : Boolean = false
     private var zoomUpdate = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -350,6 +349,9 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
        var trailing: Boolean = false
         myLocationsList.add(location)
 
+        //lägger till start och slutmarker
+
+
         //skapar ny location och senaste location - kollar distansen mellan dem, adderar till totaldistance.
 
         index++
@@ -541,17 +543,31 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 NewDataManager.newLocationObjects.add(pos, ob)
             }
         }
-        // lägger till markers enligt de skapade objekten, på kartan och gör dem osynliga tillsvidare
+        // lägger till markers enligt de skapade objekten, på kartan och gör dem osynliga tillsvidare - förutom start och slut marker
+        var indexxx = 0
         for (locationObject in NewDataManager.newLocationObjects) {
+
+
             println("!!! Sedan:   $locationObject")
             val lt1 = locationObject.locLatLng!!.latitude
             val lg1 = locationObject.locLatLng!!.longitude
 
-            val icon = BitmapDescriptorFactory.fromResource(R.drawable.testmarkeriiliten)
-
-            val marker = map.addMarker(MarkerOptions().position(LatLng(lt1, lg1)).icon(icon).visible(false))
-            markerList.add(marker)
+            val icon = BitmapDescriptorFactory.fromResource(R.drawable.testmarkerii)
+            if (indexxx == 0){
+                val startMarker = map.addMarker(MarkerOptions().position(LatLng(lt1, lg1)).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)).visible(true))
+            }
+            else if (indexxx == NewDataManager.newLocationObjects.size-1){
+                map.addMarker(MarkerOptions().position(LatLng(lt1, lg1)).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)).visible(true))
+            }
+            else {
+                val marker = map.addMarker(
+                    MarkerOptions().position(LatLng(lt1, lg1)).icon(icon).visible(false)
+                )
+                markerList.add(marker)
+            }
+            indexxx ++
         }
+
         for (locationObject in ObjectDataManager.locationObjects) {
             println("!!! Från ObjectDataManager Sedan:   $locationObject")
         }
