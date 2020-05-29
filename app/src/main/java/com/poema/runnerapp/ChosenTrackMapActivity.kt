@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.location.Location
 import android.os.Bundle
 import android.os.Handler
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.widget.Button
 import android.widget.Switch
@@ -33,13 +34,13 @@ import kotlin.concurrent.timer
 
 
 class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickListener,
-    GoogleMap.OnMarkerClickListener
-    {
+    GoogleMap.OnMarkerClickListener, TextToSpeech.OnInitListener
+{
 
     private lateinit var locationCallback: LocationCallback
     private lateinit var locationRequest: LocationRequest
     private var locationUpdateState = false
-
+    private var tts: TextToSpeech? = null
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
         private const val REQUEST_CHECK_SETTINGS = 2
@@ -75,6 +76,8 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private var havePressedStop = true
     private var myLocationsList = mutableListOf<Location>()
     private var zoomUpdate = true
+    private var speechIsInitialized = false
+    private var statusChanged = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,6 +85,10 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        // initialisera speech
+
+        tts = TextToSpeech(this,this)
 
         //ta emot position
 
@@ -196,6 +203,23 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         }
         getLocationObjects(position)
         createLocationRequest()
+    }
+    override fun onInit(status: Int) {
+
+        if (status == TextToSpeech.SUCCESS) {
+            // set US English as language for tts
+            val result = tts!!.setLanguage(Locale.US)
+
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                Log.e("TTS","The Language specified is not supported!")
+            } else {
+                speechIsInitialized = true
+            }
+
+        } else {
+            Log.e("TTS", "Initilization Failed!")
+        }
+
     }
 
     private fun getCurrentDateTime(): Date {
@@ -341,10 +365,8 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     override fun onMarkerClick(p0: Marker?): Boolean {
         return false
     }
-
     override fun onPolylineClick(p0: Polyline?) {
     }
-
     private fun doSomethingWithLastLocation(location: Location) {
        var trailing: Boolean = false
         myLocationsList.add(location)
@@ -381,6 +403,8 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 val str = String.format("%.0f", (ghostAccDistance - totalDistance)) + "m"
                 aotValue.setTextColor(Color.RED)
                 aotValue.text = str
+                val speakString = "You are trailing by " + str.substring(0,str.length-1) + " meters"
+                speakOut(speakString)
             } else {
                 trailing = false
                 aot.setTextColor(Color.GREEN)
@@ -388,6 +412,9 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 aotValue.setTextColor(Color.GREEN)
                 val str = String.format("%.0f", (totalDistance - ghostAccDistance)) + "m"
                 aotValue.text = str
+                //"Set: " + b.substring(0,b.length-10)
+                val speakString = "You are leading by "+ str.substring(0,str.length-1) + " meters"
+                speakOut(speakString)
             }
         } else {
             val resultText = findViewById<TextView>(R.id.textView5)
@@ -587,6 +614,10 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         }
         eraseCollection()
     }
+    private fun speakOut(text:String) {
+        tts!!.speak(text, TextToSpeech.QUEUE_FLUSH, null,"")
+    }
+
     private fun eraseCollection(){
                 db.collection("users").document(myUserUid).collection("maps").document(docUid).delete()
                     .addOnSuccessListener {
@@ -613,7 +644,16 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
     }
+    public override fun onDestroy() {
+        // Stäng av TTS
+        if (tts != null) {
+            tts!!.stop()
+            tts!!.shutdown()
+        }
+        super.onDestroy()
+    }
 }
+
 
 
 
