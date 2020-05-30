@@ -77,7 +77,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private var myLocationsList = mutableListOf<Location>()
     private var zoomUpdate = true
     private var speechIsInitialized = false
-    private var statusChanged = false
+    private var trailing: Boolean = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -207,11 +207,11 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     override fun onInit(status: Int) {
 
         if (status == TextToSpeech.SUCCESS) {
-            // set US English as language for tts
-            val result = tts!!.setLanguage(Locale.US)
+            // set UK English as language for tts
+            val result = tts!!.setLanguage(Locale.UK)
 
             if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                Log.e("TTS","The Language specified is not supported!")
+                Log.e("TTS","!!! The Language specified is not supported!")
             } else {
                 speechIsInitialized = true
             }
@@ -368,12 +368,9 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     override fun onPolylineClick(p0: Polyline?) {
     }
     private fun doSomethingWithLastLocation(location: Location) {
-       var trailing: Boolean = false
         myLocationsList.add(location)
 
         //lägger till start och slutmarker
-
-
         //skapar ny location och senaste location - kollar distansen mellan dem, adderar till totaldistance.
 
         index++
@@ -397,24 +394,29 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             val distanceLeftStr = String.format("%.0f", (length - totalDistance))
             distanceLeft.text = distanceLeftStr
             if (totalDistance < ghostAccDistance!!) {
-                trailing = true
+
                 aot.setTextColor(Color.RED)
                 aot.text = "trailing"
                 val str = String.format("%.0f", (ghostAccDistance - totalDistance)) + "m"
                 aotValue.setTextColor(Color.RED)
                 aotValue.text = str
-                val speakString = "You are trailing by " + str.substring(0,str.length-1) + " meters"
-                speakOut(speakString)
-            } else {
-                trailing = false
+                if (trailing == false) {
+
+                    val speakString = "You are trailing by " + str.substring(0,str.length-1) + " meters"
+                    speakOut(speakString)
+                }
+                trailing = true
+                } else {
                 aot.setTextColor(Color.GREEN)
                 aot.text = "ahead"
                 aotValue.setTextColor(Color.GREEN)
                 val str = String.format("%.0f", (totalDistance - ghostAccDistance)) + "m"
                 aotValue.text = str
-                //"Set: " + b.substring(0,b.length-10)
-                val speakString = "You are leading by "+ str.substring(0,str.length-1) + " meters"
-                speakOut(speakString)
+                if (trailing == true) {
+                    val speakString = "You are leading by " + str.substring(0, str.length - 1) + " meters"
+                    speakOut(speakString)
+                }
+                trailing = false
             }
         } else {
             val resultText = findViewById<TextView>(R.id.textView5)
@@ -516,9 +518,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
 
         NewDataManager.newLocationObjects.clear()
         println("!!! Storlek från början :${ObjectDataManager.locationObjects.size}")
-        for (locationObject in ObjectDataManager.locationObjects) {
-            println("!!! Från ObjectDataManager Först:   $locationObject")
-        }
         // kalkylerar fram och lägger till nya objekt för varje sekund istället för var fjärde eller femte
         for (x in 1 until ObjectDataManager.locationObjects.size) {
 
@@ -571,33 +570,28 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             }
         }
         // lägger till markers enligt de skapade objekten, på kartan och gör dem osynliga tillsvidare - förutom start och slut marker
-        var indexxx = 0
-        for (locationObject in NewDataManager.newLocationObjects) {
+        for ((indexxx, locationObject) in NewDataManager.newLocationObjects.withIndex()) {
 
-
-            println("!!! Sedan:   $locationObject")
             val lt1 = locationObject.locLatLng!!.latitude
             val lg1 = locationObject.locLatLng!!.longitude
 
             val icon = BitmapDescriptorFactory.fromResource(R.drawable.testmarkerii)
-            if (indexxx == 0){
-                val startMarker = map.addMarker(MarkerOptions().position(LatLng(lt1, lg1)).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)).visible(true))
+            when (indexxx) {
+                0 -> {
+                   map.addMarker(MarkerOptions().position(LatLng(lt1, lg1)).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)).visible(true))
+                }
+                NewDataManager.newLocationObjects.size-1 -> {
+                    map.addMarker(MarkerOptions().position(LatLng(lt1, lg1)).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)).visible(true))
+                }
+                else -> {
+                    val marker = map.addMarker(
+                        MarkerOptions().position(LatLng(lt1, lg1)).icon(icon).visible(false)
+                    )
+                    markerList.add(marker)
+                }
             }
-            else if (indexxx == NewDataManager.newLocationObjects.size-1){
-                map.addMarker(MarkerOptions().position(LatLng(lt1, lg1)).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)).visible(true))
-            }
-            else {
-                val marker = map.addMarker(
-                    MarkerOptions().position(LatLng(lt1, lg1)).icon(icon).visible(false)
-                )
-                markerList.add(marker)
-            }
-            indexxx ++
         }
 
-        for (locationObject in ObjectDataManager.locationObjects) {
-            println("!!! Från ObjectDataManager Sedan:   $locationObject")
-        }
     }
 
     private fun eraseIfLostToGhost(){
