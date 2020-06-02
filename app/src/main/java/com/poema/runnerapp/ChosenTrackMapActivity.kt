@@ -79,6 +79,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private var speechIsInitialized = false
     private var trailing: Boolean = true
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_choosen_track_map2)
@@ -101,18 +102,20 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         if (Datamanager.maps[position].name != null) {
             trackName = Datamanager.maps[position].name!!
         }
+
+        // visar ghostmarkern för innevarande sekund och "av-visar" den förra. Gör detta OM sekunden har bytts
         val handler = Handler()
         val delay = 1000 //milliseconds
         handler.postDelayed(object : Runnable {
             override fun run() {
                 if (timeUnit < markerList.size && timerOn != null) {
-                    if (timeUnit >= 0) {
+                    if (timeUnit >= 0 && timeUnit != sec){
                         val a = markerList[timeUnit]
                         a.isVisible = true
                         val b = markerList[sec]
                         b.isVisible = false
+                        sec = timeUnit
                     }
-                    sec = timeUnit
                 }
                 handler.postDelayed(this, delay.toLong())
             }
@@ -142,27 +145,12 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         stopButton.setOnClickListener {
             if (timerOn != null && havePressedStop == true) {
                 havePressedStop = false
-                startTimer(false)
-                onPause()
-                println("!!! accumulerad distans:  ${NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance}")
-                var ghostGoalDistance = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance
-                if (ghostGoalDistance != null) {
-                    val a = 0.1 * ghostGoalDistance     //procentsatsen för när användaren ska anses vara tillräckligt nära mål mätt i ackumulerad distans
-                                                                // för att tiden ska kunna räknas som ev rekord. Dessutom ska den befinna sig högst 60m från startpunkten
-                                                                // när senaste location togs (4-5s intervaller)
-                    if (timeUnit < markerList.size && totalDistance > (ghostGoalDistance - a) && myLocationsList[0].distanceTo(myLocationsList[index-1]) < 60.0) {
-                        // vad ska hända när man vunnit
-                        val intent = Intent(this, DefeatedGhostActivity::class.java)
-                        intent.putExtra("Time", timeUnit)
-                        intent.putExtra("Distance", totalDistance)
-                        intent.putExtra("docUid", docUid)
-                        intent.putExtra("ind",index)
-                        intent.putExtra("posit", position)
-                        startActivity(intent)
-                    } else {
-                        eraseIfLostToGhost()
+                fusedLocationClient.lastLocation
+                    .addOnSuccessListener { location : Location? ->
+                       doSomethingWithLastLocation(location!!)
+                        println("!!! I-samband-med-stop-location sparad")
+                        endStoppingProcedure(position)
                     }
-                }
             }
         }
         //fixar startknappen
@@ -204,6 +192,31 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         getLocationObjects(position)
         createLocationRequest()
     }
+    private fun endStoppingProcedure(position:Int){
+        startTimer(false)
+        onPause()
+        var ghostGoalDistance = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance
+        if (ghostGoalDistance != null) {
+            val a = 0.1 * ghostGoalDistance     //procentsatsen för när användaren ska anses vara tillräckligt nära mål mätt i ackumulerad distans
+            // för att tiden ska kunna räknas som ev rekord. Dessutom ska den befinna sig högst 60m från startpunkten
+            // när senaste location togs (4-5s intervaller)
+            if (timeUnit < markerList.size && totalDistance > (ghostGoalDistance - a) && myLocationsList[0].distanceTo(myLocationsList[index-1]) < 60.0) {
+                // vad ska hända när man vunnit
+
+                val intent = Intent(this, DefeatedGhostActivity::class.java)
+                intent.putExtra("Time", timeUnit)
+                intent.putExtra("Distance", totalDistance)
+                intent.putExtra("docUid", docUid)
+                intent.putExtra("ind",index)
+                intent.putExtra("posit", position)
+                startActivity(intent)
+            } else {
+                eraseIfLostToGhost()
+            }
+        }
+
+    }
+
     override fun onInit(status: Int) {
 
         if (status == TextToSpeech.SUCCESS) {
@@ -221,7 +234,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         }
 
     }
-
     private fun getCurrentDateTime(): Date {
         return Calendar.getInstance().time
     }
@@ -412,7 +424,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 aotValue.setTextColor(Color.GREEN)
                 val str = String.format("%.0f", (totalDistance - ghostAccDistance)) + "m"
                 aotValue.text = str
-                if (trailing == true) {
+                if (trailing) {
                     val speakString = "You are leading by " + str.substring(0, str.length - 1) + " meters"
                     speakOut(speakString)
                 }
@@ -452,6 +464,9 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 17f))
         }
         //skapar och sparar LocationObjects till firestore till den tomma map:pen.
+        saveLocationObject(location)
+    }
+    private fun saveLocationObject(location:Location){
         val locGeo = GeoPoint(location.latitude, location.longitude)
         val a = LocationObject("", locGeo, totalDistance, timeUnit)
         db.collection("users").document(myUserUid).collection("maps").document(docUid)
@@ -463,7 +478,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 println("!!!LocationObject sparades INTE!")
             }
     }
-
     override fun onBackPressed() {
         // ser till så man inte kan lämna sidan om timern är på
         if (timerOn == null) {

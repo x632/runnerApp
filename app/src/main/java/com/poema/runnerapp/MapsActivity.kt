@@ -82,20 +82,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             zoomUpdate = isChecked
         }
 
-
+        //STOP-Knappen
         val stopButton = findViewById<Button>(R.id.stopButton)
         stopButton.setOnClickListener {
 
-            if (timerOn != null && havePressedStop == true) {
+            if (timerOn != null && havePressedStop) {
                 havePressedStop = false
-                startTimer(false)
-                onPause()
-                val intent = Intent(this, NamingTrack::class.java)
-                intent.putExtra("Time", timeUnit)
-                intent.putExtra("Distance", totalDistance)
-                intent.putExtra("docUid", docUid)
-                intent.putExtra("ind",index)
-                startActivity(intent)
+                fusedLocationClient.lastLocation
+                    .addOnSuccessListener { location : Location? ->
+                    doSomethingWithLastLocation(location!!)
+                        println("!!! I-samband-med-stop-location sparad")
+                        endStoppingProcedure()
+                    }
             }
         }
 
@@ -131,6 +129,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             }
         }
         createLocationRequest()
+    }
+    private fun endStoppingProcedure(){
+        startTimer(false)
+        onPause()
+        val intent = Intent(this, NamingTrack::class.java)
+        intent.putExtra("Time", timeUnit)
+        intent.putExtra("Distance", totalDistance)
+        intent.putExtra("docUid", docUid)
+        intent.putExtra("ind",index)
+        startActivity(intent)
     }
     private fun getCurrentDateTime(): Date {
         return getInstance().time
@@ -322,7 +330,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         if (zoomUpdate) {
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 16f))
         }
-        //spara till firestore
+       saveLocationObject(location)
+    }
+
+    private fun saveLocationObject(location: Location){
         val locGeo =  GeoPoint(location.latitude, location.longitude)
         val a = LocationObject("",locGeo, totalDistance, timeUnit)
         db.collection("users").document(myUserUid).collection("maps").document(docUid).collection("mapObjects").document("$index").set(a)
@@ -332,6 +343,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             .addOnFailureListener {
                 println("!!!LocationObject sparades INTE!")
             }
+
     }
     override fun onBackPressed() {
         if (timerOn == null) {
