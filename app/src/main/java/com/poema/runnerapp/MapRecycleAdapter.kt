@@ -19,7 +19,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 
 class MapRecycleAdapter (private val context : Context, private val maps: List<Map>, private val myUserUid: String): RecyclerView.Adapter<MapRecycleAdapter.ViewHolder>() {
-    //inflator behövs för att skapa en view utifrån en layout (xml)
 
     private var mapObjectUidIndex = -1
     private var idList = mutableListOf<String>()
@@ -28,8 +27,8 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
     private val layoutInflater = LayoutInflater.from(context)
     var loggedIn = false
     var myUserId = ""
-    var b = ""
-    var d = ""
+    private var b = ""
+
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -123,14 +122,14 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
     }
 
     inner class ViewHolder(itemView : View) : RecyclerView.ViewHolder(itemView) {
-        // när en viewholder skapas så letar vi reda på våra textview:s som finns i vår item_view
-        val textViewName = itemView.findViewById<TextView>(R.id.textName)
-        val textViewLength = itemView.findViewById<TextView>(R.id.textLength)
-        val textViewTime = itemView.findViewById<TextView>(R.id.textTime)
+
+        val textViewName: TextView = itemView.findViewById<TextView>(R.id.textName)
+        val textViewLength: TextView = itemView.findViewById<TextView>(R.id.textLength)
+        val textViewTime: TextView = itemView.findViewById<TextView>(R.id.textTime)
        // val textViewId = itemView.findViewById<TextView>(R.id.textId)
-        val textViewDate  = itemView.findViewById<TextView>(R.id.textVdate)
-        val delButton =  itemView.findViewById<ImageView>(R.id.deleteImage)
-        val chooseTrackBtn = itemView.findViewById<ImageButton>(R.id.chooseImgBtn)
+        val textViewDate: TextView = itemView.findViewById<TextView>(R.id.textVdate)
+        val delButton: ImageView =  itemView.findViewById<ImageView>(R.id.deleteImage)
+        private val chooseTrackBtn: ImageButton = itemView.findViewById<ImageButton>(R.id.chooseImgBtn)
         var mapPosition = 0
 
         init{

@@ -90,7 +90,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
                 havePressedStop = false
                 fusedLocationClient.lastLocation
                     .addOnSuccessListener { location : Location? ->
+                        if (location != null){
                     doSomethingWithLastLocation(location!!)
+                        }
                         println("!!! I-samband-med-stop-location sparad")
                         endStoppingProcedure()
                     }

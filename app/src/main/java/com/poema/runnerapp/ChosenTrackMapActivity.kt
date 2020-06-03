@@ -1,7 +1,9 @@
 package com.poema.runnerapp
 
 import android.app.Activity
-import android.content.*
+import android.content.ContentValues
+import android.content.Intent
+import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
@@ -30,7 +32,6 @@ import com.google.firebase.firestore.Query
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.concurrent.timer
-
 
 
 class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickListener,
@@ -78,7 +79,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private var zoomUpdate = true
     private var speechIsInitialized = false
     private var trailing: Boolean = true
-
+    private var voiceUpdates: Boolean = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -103,7 +104,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             trackName = Datamanager.maps[position].name!!
         }
 
-        // visar ghostmarkern för innevarande sekund och "av-visar" den förra. Gör detta OM sekunden har bytts
+        // visar ghostmarkern för innevarande sekund och gömmer den förra. Gör detta OM sekunden har bytts
         val handler = Handler()
         val delay = 1000 //milliseconds
         handler.postDelayed(object : Runnable {
@@ -116,8 +117,12 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                         b.isVisible = false
                         sec = timeUnit
                     }
+
                 }
-                handler.postDelayed(this, delay.toLong())
+                if (timeUnit >= markerList.size){haveLost("från handler") }
+                if (!lost)
+                {
+                handler.postDelayed(this, delay.toLong())}
             }
         }, delay.toLong())
         //Skriver in tracknamnet i rubriken
@@ -133,12 +138,16 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             myUserUid = auth.currentUser!!.uid
         }
 
-        //fixar switchknappen
+        //fixar Zoom switchknappen
         val switchBtn = findViewById<Switch>(R.id.switch1)
         switchBtn.setOnCheckedChangeListener{_, isChecked ->
             zoomUpdate = isChecked
         }
-
+        // fixar voiceupdates knappen
+        val switchBtn2 = findViewById<Switch>(R.id.switch2)
+        switchBtn2.setOnCheckedChangeListener{_, isChecked ->
+            voiceUpdates = isChecked
+        }
 
         //fixar stopknappen
         val stopButton = findViewById<Button>(R.id.stopbtn)
@@ -147,18 +156,20 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 havePressedStop = false
                 fusedLocationClient.lastLocation
                     .addOnSuccessListener { location : Location? ->
-                       doSomethingWithLastLocation(location!!)
-                        println("!!! I-samband-med-stop-location sparad")
-                        endStoppingProcedure(position)
+                        if (location != null) {
+                            doSomethingWithLastLocation(location)
+                            println("!!! I-samband-med-stop-location sparad")
+                            endStoppingProcedure(position, location)
+                        }
                     }
             }
         }
         //fixar startknappen
-
         val startButton = findViewById<Button>(R.id.startbtn)
         startButton.setOnClickListener {
             if (timerOn == null && havePressedStart == true) {
                 havePressedStart = false
+                if (voiceUpdates) speakOut("Start!")
                 val myDate = getCurrentDateTime()
                 val dateInString = myDate.toString("yyyy-MM-dd HH:mm:ss.SSSSSS")
 
@@ -192,15 +203,21 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         getLocationObjects(position)
         createLocationRequest()
     }
-    private fun endStoppingProcedure(position:Int){
+    private fun endStoppingProcedure(position:Int, location: Location){
         startTimer(false)
+        if (voiceUpdates){speakOut("stop")}
         onPause()
         var ghostGoalDistance = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance
         if (ghostGoalDistance != null) {
             val a = 0.1 * ghostGoalDistance     //procentsatsen för när användaren ska anses vara tillräckligt nära mål mätt i ackumulerad distans
-            // för att tiden ska kunna räknas som ev rekord. Dessutom ska den befinna sig högst 60m från startpunkten
-            // när senaste location togs (4-5s intervaller)
-            if (timeUnit < markerList.size && totalDistance > (ghostGoalDistance - a) && myLocationsList[0].distanceTo(myLocationsList[index-1]) < 60.0) {
+            // för att tiden ska kunna räknas som ev rekord. Dessutom ska användaren befinna sig högst 20m från slutpunkten på ghostbanan (målet)
+            val latestLocation = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].locLatLng
+            val endLocation = Location("Punkt")
+                if (latestLocation != null) {
+                    endLocation.latitude = latestLocation.latitude
+                    endLocation.longitude = latestLocation.longitude
+                }
+            if (timeUnit < markerList.size && totalDistance > (ghostGoalDistance - a) && location.distanceTo(endLocation) < 20.0) {
                 // vad ska hända när man vunnit
 
                 val intent = Intent(this, DefeatedGhostActivity::class.java)
@@ -406,36 +423,59 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             val distanceLeftStr = String.format("%.0f", (length - totalDistance))
             distanceLeft.text = distanceLeftStr
             if (totalDistance < ghostAccDistance!!) {
-
+                val differ = ghostAccDistance - totalDistance
                 aot.setTextColor(Color.RED)
                 aot.text = "trailing"
-                val str = String.format("%.0f", (ghostAccDistance - totalDistance)) + "m"
+                val str = String.format("%.0f", (differ)) + "m"
                 aotValue.setTextColor(Color.RED)
                 aotValue.text = str
-                if (trailing == false) {
-
-                    val speakString = "You are trailing by " + str.substring(0,str.length-1) + " meters"
-                    speakOut(speakString)
+                val differInt= str.substring(0,str.length-1).toInt()
+                var speakString = ""
+                if (!trailing && index > 0) {
+                    when (differInt) {
+                        1 -> {
+                            speakString =
+                                "You are trailing by " + str.substring(0, str.length - 1) + " meter"
+                        }
+                        0 -> {
+                            speakString =
+                                "You are trailing by less than one meter"
+                        }
+                        else -> {
+                            speakString = "You are trailing by " + str.substring(0,str.length-1) + " meters"
+                        }
+                    }
+                    if (voiceUpdates){speakOut(speakString)}
                 }
                 trailing = true
                 } else {
+                val differ = totalDistance - ghostAccDistance
                 aot.setTextColor(Color.GREEN)
                 aot.text = "ahead"
                 aotValue.setTextColor(Color.GREEN)
-                val str = String.format("%.0f", (totalDistance - ghostAccDistance)) + "m"
+                val str = String.format("%.0f", (differ)) + "m"
                 aotValue.text = str
-                if (trailing) {
-                    val speakString = "You are leading by " + str.substring(0, str.length - 1) + " meters"
-                    speakOut(speakString)
+                val differInt = str.substring(0,str.length-1).toInt()
+                var speakString = "Start"
+                if (trailing && index > 1) {
+                    when (differInt) {
+                        1 -> {
+                            speakString = "You are ahead by " + str.substring(0,str.length-1) + " meter"
+                        }
+                        0 -> {
+                            speakString =
+                                "You are ahead by less than one meter"
+                        }
+                        else -> {
+                            speakString = "You are ahead by " + str.substring(0,str.length-1) + " meters"
+                        }
+                    }
+                    if (voiceUpdates){speakOut(speakString)}
                 }
                 trailing = false
             }
         } else {
-            val resultText = findViewById<TextView>(R.id.textView5)
-            resultText.setTextColor(Color.RED)
-            resultText.textSize = 22F
-            resultText.text = "Your ghost won!! Better luck next time!"
-            lost = true
+            haveLost("från intervallet")
         }
 
         //fyller på lista med inkommande locationspunkter och ritar en polyline
@@ -450,7 +490,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             else{
                 options.color(Color.GREEN)
             }
-            options.width(9f)
+            options.width(12f)
 
             for (LatLng in myLocLatLngList) {
                 options.add(LatLng)
@@ -465,6 +505,14 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         }
         //skapar och sparar LocationObjects till firestore till den tomma map:pen.
         saveLocationObject(location)
+    }
+    private fun haveLost(text:String){
+        println("!!! $text")
+        val resultText = findViewById<TextView>(R.id.textView5)
+        resultText.setTextColor(Color.RED)
+        resultText.textSize = 22F
+        resultText.text = "Your ghost won!! Better luck next time!"
+        lost = true
     }
     private fun saveLocationObject(location:Location){
         val locGeo = GeoPoint(location.latitude, location.longitude)
@@ -579,23 +627,24 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         for (locationObject in ObjectDataManager.locationObjects) {
             if (locationObject != null) {
                 val pos = locationObject.time!!
-                val ob = locationObject
-                NewDataManager.newLocationObjects.add(pos, ob)
+                NewDataManager.newLocationObjects.add(pos, locationObject)
             }
         }
         // lägger till markers enligt de skapade objekten, på kartan och gör dem osynliga tillsvidare - förutom start och slut marker
-        for ((indexxx, locationObject) in NewDataManager.newLocationObjects.withIndex()) {
+        for ((i, locationObject) in NewDataManager.newLocationObjects.withIndex()) {
 
             val lt1 = locationObject.locLatLng!!.latitude
             val lg1 = locationObject.locLatLng!!.longitude
 
             val icon = BitmapDescriptorFactory.fromResource(R.drawable.testmarkerii)
-            when (indexxx) {
+            when (i) {
                 0 -> {
-                   map.addMarker(MarkerOptions().position(LatLng(lt1, lg1)).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)).visible(true))
+                 val marker = map.addMarker(MarkerOptions().position(LatLng(lt1, lg1)).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)).visible(true))
+                markerList.add(marker)
                 }
                 NewDataManager.newLocationObjects.size-1 -> {
-                    map.addMarker(MarkerOptions().position(LatLng(lt1, lg1)).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)).visible(true))
+                    val marker = map.addMarker(MarkerOptions().position(LatLng(lt1, lg1)).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)).visible(true))
+                markerList.add(marker)
                 }
                 else -> {
                     val marker = map.addMarker(
