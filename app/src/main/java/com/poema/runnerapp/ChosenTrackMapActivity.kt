@@ -34,6 +34,7 @@ import java.util.*
 import kotlin.concurrent.timer
 
 
+
 class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickListener,
     GoogleMap.OnMarkerClickListener, TextToSpeech.OnInitListener
 {
@@ -195,7 +196,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 super.onLocationResult(p0)
 
                 lastLocation = p0.lastLocation
-                //startGhost()
+
                 println("!!! timeunit: $timeUnit")
                 doSomethingWithLastLocation(lastLocation)
             }
@@ -491,7 +492,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 options.color(Color.GREEN)
             }
             options.width(12f)
-
             for (LatLng in myLocLatLngList) {
                 options.add(LatLng)
             }
