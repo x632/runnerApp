@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
 import android.os.Bundle
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.Switch
 import android.widget.TextView
@@ -69,6 +70,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
@@ -91,7 +93,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
                 fusedLocationClient.lastLocation
                     .addOnSuccessListener { location : Location? ->
                         if (location != null){
-                    doSomethingWithLastLocation(location!!)
+                    doSomethingWithLastLocation(location)
                         }
                         println("!!! I-samband-med-stop-location sparad")
                         endStoppingProcedure()
@@ -301,7 +303,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             val a = location
             avgSpeed += a.speed
         }
-        avgSpeed /= index
+        avgSpeed /= timeUnit
         val tvSpeedValue = findViewById<TextView>(R.id.tvAvgSpeedValue)
         tvSpeedValue.text = String.format("%.1f", avgSpeed)+" m/sec"
         statAvgSpeed = String.format("%.1f", avgSpeed)

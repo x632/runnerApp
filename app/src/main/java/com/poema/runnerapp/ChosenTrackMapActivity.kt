@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.speech.tts.TextToSpeech
 import android.util.Log
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.Switch
 import android.widget.TextView
@@ -88,6 +89,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         // initialisera speech
 
@@ -208,7 +210,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         startTimer(false)
         if (voiceUpdates){speakOut("stop")}
         onPause()
-        var ghostGoalDistance = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance
+        val ghostGoalDistance = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance
         if (ghostGoalDistance != null) {
             val a = 0.1 * ghostGoalDistance     //procentsatsen för när användaren ska anses vara tillräckligt nära mål mätt i ackumulerad distans
             // för att tiden ska kunna räknas som ev rekord. Dessutom ska användaren befinna sig högst 20m från slutpunkten på ghostbanan (målet)
@@ -625,10 +627,10 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         }
         // tar de gamla värdena och lägger in dem i den nya listan på rätt platser - varje sekund får ett eget objekt
         for (locationObject in ObjectDataManager.locationObjects) {
-            if (locationObject != null) {
+            
                 val pos = locationObject.time!!
                 NewDataManager.newLocationObjects.add(pos, locationObject)
-            }
+
         }
         // lägger till markers enligt de skapade objekten, på kartan och gör dem osynliga tillsvidare - förutom start och slut marker
         for ((i, locationObject) in NewDataManager.newLocationObjects.withIndex()) {
