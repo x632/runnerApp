@@ -104,7 +104,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         val startButton = findViewById<Button>(R.id.startbutton)
         startButton.setOnClickListener {
 
-            if (timerOn == null && havePressedStart == true) {
+            if (timerOn == null && havePressedStart) {
                 havePressedStart = false
                 val myDate = getCurrentDateTime()
                 val dateInString = myDate.toString("yyyy-MM-dd HH:mm:ss.SSSSSS")
@@ -303,7 +303,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             val a = location
             avgSpeed += a.speed
         }
-        avgSpeed /= timeUnit
+        avgSpeed /= index
         val tvSpeedValue = findViewById<TextView>(R.id.tvAvgSpeedValue)
         tvSpeedValue.text = String.format("%.1f", avgSpeed)+" m/sec"
         statAvgSpeed = String.format("%.1f", avgSpeed)

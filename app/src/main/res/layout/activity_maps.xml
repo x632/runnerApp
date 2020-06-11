@@ -11,9 +11,9 @@
 
     <Button
         android:id="@+id/startbutton"
-        android:layout_width="160dp"
+        android:layout_width="150dp"
         android:layout_height="60dp"
-        android:layout_marginStart="30dp"
+        android:layout_marginStart="20dp"
         android:layout_marginTop="10dp"
         android:background="@layout/roundedcorners"
         android:text="@string/button3"
@@ -24,9 +24,9 @@
 
     <Button
         android:id="@+id/stopButton"
-        android:layout_width="160dp"
+        android:layout_width="150dp"
         android:layout_height="60dp"
-        android:layout_marginEnd="30dp"
+        android:layout_marginEnd="20dp"
         android:background="@layout/roundedcorners"
         android:text="@string/button4"
         android:textColor="@color/colorBTextRed"

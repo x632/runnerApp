@@ -627,7 +627,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         }
         // tar de gamla värdena och lägger in dem i den nya listan på rätt platser - varje sekund får ett eget objekt
         for (locationObject in ObjectDataManager.locationObjects) {
-            
+
                 val pos = locationObject.time!!
                 NewDataManager.newLocationObjects.add(pos, locationObject)
 

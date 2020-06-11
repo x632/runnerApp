@@ -24,7 +24,7 @@
 
     <Button
         android:id="@+id/button"
-        android:layout_width="170dp"
+        android:layout_width="160dp"
         android:layout_height="60dp"
         android:layout_marginStart="20dp"
         android:layout_marginEnd="20dp"
@@ -39,7 +39,7 @@
 
     <Button
         android:id="@+id/loginButton"
-        android:layout_width="170dp"
+        android:layout_width="160dp"
         android:layout_height="60dp"
         android:layout_marginEnd="20dp"
         android:background="@layout/roundedcorners"
