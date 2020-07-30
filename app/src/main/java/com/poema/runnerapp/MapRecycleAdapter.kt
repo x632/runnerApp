@@ -34,7 +34,7 @@ class MapRecycleAdapter (private val context : Context, private val maps: List<M
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
-        if (auth !=null) {
+        if (auth != null) {
             loggedIn = true
             myUserId = auth!!.currentUser!!.uid
         }

@@ -62,6 +62,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     private var myLocationsList = mutableListOf<Location>()
     private var avgSpeed = 0.0
     private var statAvgSpeed = ""
+    private var lastLoc = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -70,8 +71,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+        //håller skrämen på!
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-
+        //firebase autentisering
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
         if (auth.currentUser != null) {
@@ -93,6 +95,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
                 fusedLocationClient.lastLocation
                     .addOnSuccessListener { location : Location? ->
                         if (location != null){
+                            lastLoc = true
                     doSomethingWithLastLocation(location)
                         }
                         println("!!! I-samband-med-stop-location sparad")
@@ -134,6 +137,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         }
         createLocationRequest()
     }
+    //skickar över Tid, längd på banan, trackens UID, antal locations
     private fun endStoppingProcedure(){
         startTimer(false)
         onPause()
@@ -338,15 +342,24 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     }
 
     private fun saveLocationObject(location: Location){
+        val a : LocationObject
         val locGeo =  GeoPoint(location.latitude, location.longitude)
-        val a = LocationObject("",locGeo, totalDistance, timeUnit)
-        db.collection("users").document(myUserUid).collection("maps").document(docUid).collection("mapObjects").document("$index").set(a)
-            .addOnSuccessListener {
-                println("!!! locationObject sparades på firestore")
-            }
-            .addOnFailureListener {
-                println("!!!LocationObject sparades INTE!")
-            }
+        if (lastLoc) {
+            a = LocationObject("Sista location!!",locGeo, totalDistance, timeUnit)
+            println("!!!! Varit här!!!!!!!!!!")
+            lastLoc = false
+        }
+        else {
+            a = LocationObject("", locGeo, totalDistance, timeUnit)
+        }
+            db.collection("users").document(myUserUid).collection("maps").document(docUid)
+                .collection("mapObjects").document("$index").set(a)
+                .addOnSuccessListener {
+                    println("!!! locationObject sparades på firestore")
+                }
+                .addOnFailureListener {
+                    println("!!!LocationObject sparades INTE!")
+                }
 
     }
     override fun onBackPressed() {

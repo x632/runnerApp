@@ -109,10 +109,10 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
 
         // visar ghostmarkern för innevarande sekund och gömmer den förra. Gör detta OM sekunden har bytts
         val handler = Handler()
-        val delay = 1000 //milliseconds
+        val delay = 250 //milliseconds
         handler.postDelayed(object : Runnable {
             override fun run() {
-                if (timeUnit < markerList.size && timerOn != null) {
+                if (markerList.size > 1 && timeUnit < markerList.size-1  && timerOn != null) {
                     if (timeUnit >= 0 && timeUnit != sec){
                         val a = markerList[timeUnit]
                         a.isVisible = true
@@ -122,7 +122,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                     }
 
                 }
-                if (timeUnit >= markerList.size){haveLost("från handler") }
+                if (markerList.size > 1 && timeUnit >= markerList.size-1){haveLost("från handler") }
                 if (!lost)
                 {
                 handler.postDelayed(this, delay.toLong())}
@@ -170,7 +170,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         //fixar startknappen
         val startButton = findViewById<Button>(R.id.startbtn)
         startButton.setOnClickListener {
-            if (timerOn == null && havePressedStart == true) {
+            if (timerOn == null && havePressedStart) {
                 havePressedStart = false
                 if (voiceUpdates) speakOut("Start!")
                 val myDate = getCurrentDateTime()
@@ -402,7 +402,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private fun doSomethingWithLastLocation(location: Location) {
         myLocationsList.add(location)
 
-        //lägger till start och slutmarker
         //skapar ny location och senaste location - kollar distansen mellan dem, adderar till totaldistance.
 
         index++

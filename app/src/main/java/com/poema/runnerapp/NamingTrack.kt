@@ -72,7 +72,7 @@ class NamingTrack : AppCompatActivity() {
 
     override fun onBackPressed() {
         Toast.makeText(
-            getApplicationContext(),
+            applicationContext,
             "You cannot go back here. You can always delete your track on the next page.",
             Toast.LENGTH_LONG
         ).show();
@@ -105,7 +105,8 @@ class NamingTrack : AppCompatActivity() {
             }
     }
     fun goHome(){
-        Toast.makeText(getApplicationContext(), "Your recording has been deleted.",
+        Toast.makeText(
+            applicationContext, "Your recording has been deleted.",
             Toast.LENGTH_LONG).show(); goToStartPage()
     }
     fun goToStartPage(){
