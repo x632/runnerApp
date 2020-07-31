@@ -4,8 +4,7 @@ import androidx.room.Room
 
 
 object Datamanager {
-    val maps = mutableListOf<Map>()
-
+    val tracks = mutableListOf<Track>()
 }
 
 

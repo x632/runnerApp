@@ -11,38 +11,12 @@ import com.google.firebase.firestore.FirebaseFirestore
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var db: FirebaseFirestore
-    private lateinit var auth: FirebaseAuth
-    private var myUserUid = ""
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        db = FirebaseFirestore.getInstance()
-        auth = FirebaseAuth.getInstance()
 
-        if (auth.currentUser != null) {
-            myUserUid = auth.currentUser!!.uid
-
-        }else{
-            auth.signInAnonymously()
-                .addOnCompleteListener(this) { task ->
-                    myUserUid = if (task.isSuccessful) {
-                        println("!!! signInAnonymously:success")
-                        val user = auth.currentUser
-                        auth.currentUser?.uid!!
-
-                    } else {
-                        // If sign in fails, display a message to the user.
-                        println("SignInAnonymously:failure")
-                        Toast.makeText(baseContext, "Authentication failed.",
-                            Toast.LENGTH_SHORT).show()
-                        ""
-                    }
-
-
-                }
-        }
 
         val button = findViewById<Button>(R.id.button)
 

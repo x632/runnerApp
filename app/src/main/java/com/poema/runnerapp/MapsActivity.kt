@@ -21,17 +21,22 @@ import com.google.android.gms.maps.GoogleMap.OnPolylineClickListener
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.GeoPoint
+import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.Calendar.*
 import kotlin.concurrent.timer
+import kotlin.coroutines.CoroutineContext
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickListener,
-    GoogleMap.OnMarkerClickListener  {
+    GoogleMap.OnMarkerClickListener, CoroutineScope {
+
+    var downloadedTracks = mutableListOf<Track>()
+    private lateinit var job : Job
+    override val coroutineContext : CoroutineContext
+        get() = Dispatchers.Main + job
+    private lateinit var db : AppDatabase
 
     private lateinit var locationCallback: LocationCallback
     private lateinit var locationRequest: LocationRequest
@@ -52,10 +57,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     private var index : Int = 0
     private var location1 : Location? = null
     private var location2 : Location? = null
-    lateinit var db: FirebaseFirestore
-    private lateinit var auth: FirebaseAuth
-    var docUid = ""
-    private var myUserUid = ""
+    private var trackId : Long = 0
     private var havePressedStart = true
     private var havePressedStop = true
     private var zoomUpdate = true
@@ -68,17 +70,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
+        job = Job()
+        db = DatabaseSource.getInstance(applicationContext)
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
         //håller skrämen på!
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         //firebase autentisering
-        db = FirebaseFirestore.getInstance()
-        auth = FirebaseAuth.getInstance()
-        if (auth.currentUser != null) {
-            myUserUid = auth.currentUser!!.uid
-        }
+       //raderad...
 
         //fixar switchknappen
         val mySwitchBtn = findViewById<Switch>(R.id.mySwitch)
@@ -112,16 +112,22 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
                 val myDate = getCurrentDateTime()
                 val dateInString = myDate.toString("yyyy-MM-dd HH:mm:ss.SSSSSS")
 
-                val a = Map("", 0.0, "", "", dateInString)
-                db.collection("users").document(myUserUid).collection("maps").add(a)
+                //Ändrar här nedan till room - sparar tom bana
+
+                //val a = Map("", 0.0, "", "", dateInString)
+                val a = Track(0,0.0,"","",dateInString)
+                roomSaveTrack(a)
+                // doc Uid återstår att lösa
+
+               /* db.collection("users").document(myUserUid).collection("maps").add(a)
                     .addOnSuccessListener { uid ->
                         docUid = uid.id
-                        startingFunction()
+                        startingFunction() //OBS OBS denna är flyttad till completion handler i roomSaveTrack istället
                         println("!!! Tom bana sparades!")
                     }
                     .addOnFailureListener {
                         println("!!! Tomma banan sparades INTE!")
-                    }
+                    }*/
 
             }
         }
@@ -137,6 +143,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         }
         createLocationRequest()
     }
+
     //skickar över Tid, längd på banan, trackens UID, antal locations
     private fun endStoppingProcedure(){
         startTimer(false)
@@ -144,7 +151,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         val intent = Intent(this, NamingTrack::class.java)
         intent.putExtra("Time", timeUnit)
         intent.putExtra("Distance", totalDistance)
-        intent.putExtra("docUid", docUid)
+        //intent.putExtra("docUid", docUid)
+        //Ändrat :
+        intent.putExtra("docUid", trackId)
         intent.putExtra("ind",index)
         startActivity(intent)
     }
@@ -286,7 +295,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             if (location != null) {
                 lastLocation = location
                 val currentLatLng = LatLng(location.latitude, location.longitude)
-                println("!!! FirstLocation: ${currentLatLng}")
+                println("!!! FirstLocation: $currentLatLng")
                 map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 16f))
             }
         }
@@ -343,23 +352,30 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
 
     private fun saveLocationObject(location: Location){
         val a : LocationObject
-        val locGeo =  GeoPoint(location.latitude, location.longitude)
+        val lat =  location.latitude
+        val lng = location.longitude
         if (lastLoc) {
-            a = LocationObject("Sista location!!",locGeo, totalDistance, timeUnit)
-            println("!!!! Varit här!!!!!!!!!!")
+            //Ändrar här till room Obs : Sista location sätter noll på båda id:na tillsvidare
+            //a = LocationObject("Sista location!!",locGeo, totalDistance, timeUnit)
+            a = LocationObject(0,trackId,totalDistance,lat,lng,timeUnit)
+
             lastLoc = false
         }
         else {
-            a = LocationObject("", locGeo, totalDistance, timeUnit)
+            //Ändrar till Room....
+            //a = LocationObject("", locGeo, totalDistance, timeUnit)
+            a = LocationObject(0,trackId,totalDistance,lat,lng,timeUnit)
         }
-            db.collection("users").document(myUserUid).collection("maps").document(docUid)
+
+        roomSaveLocationObject(a)
+            /*db.collection("users").document(myUserUid).collection("maps").document(docUid)
                 .collection("mapObjects").document("$index").set(a)
                 .addOnSuccessListener {
                     println("!!! locationObject sparades på firestore")
                 }
                 .addOnFailureListener {
                     println("!!!LocationObject sparades INTE!")
-                }
+                }*/
 
     }
     override fun onBackPressed() {
@@ -367,5 +383,28 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
         }
+    }
+    private fun roomSaveLocationObject(locationObject: LocationObject){
+        async(Dispatchers.IO) {   this@MapsActivity.db.locationDao().insert(locationObject)
+            println("!!!LocationsObject saved!!")}
+
+    }
+    fun roomLoadTracks(){
+        val allTracks  = loadAllTracks()
+        launch {
+            allTracks.await().forEach {
+                downloadedTracks.add(it)
+            }
+        }
+    }
+    fun loadAllTracks() : Deferred<List<Track>>  =
+        async(Dispatchers.IO) {
+            db.locationDao().getAllTracks()
+        }
+    fun roomSaveTrack(track: Track) {
+
+        async(Dispatchers.IO) {   trackId = db.locationDao().insert(track)
+            println("!!!Track with trackID $trackId saved!!")
+            startingFunction()}
     }
 }

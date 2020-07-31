@@ -1,9 +1,15 @@
 package com.poema.runnerapp
 
-import com.google.firebase.firestore.GeoPoint
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-data class LocationObject (
-    var id : String? = null,
-    var locLatLng : GeoPoint? = null,
-    var accDistance : Double? = null,
-    var time : Int? = null)
+
+@Entity
+data class LocationObject(
+    @PrimaryKey(autoGenerate = true) val locObjId: Long,
+    val locObjTrackId: Long,
+    val accDistance: Double,
+    val locLat: Double,
+    val locLng: Double,
+    val time: Int
+)

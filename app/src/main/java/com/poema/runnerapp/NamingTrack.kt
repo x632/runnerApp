@@ -9,29 +9,29 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FirebaseFirestoreSettings
+import kotlinx.coroutines.*
+import kotlin.coroutines.CoroutineContext
 
-class NamingTrack : AppCompatActivity() {
 
-    lateinit var db: FirebaseFirestore
-    private var auth: FirebaseAuth? = null
-    private var myUserUid = ""
-    private lateinit var docUid : String
+class NamingTrack : AppCompatActivity() , CoroutineScope {
 
+
+    private var docUid : Long = 0
+    private lateinit var job : Job
+    private lateinit var db : AppDatabase
+    override val coroutineContext : CoroutineContext
+        get() = Dispatchers.Main + job
+    var downloadedLocObjects = mutableListOf<LocationObject>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_naming_track)
-        db = FirebaseFirestore.getInstance()
-        auth = FirebaseAuth.getInstance()
-        if (auth!!.currentUser != null) {
-            myUserUid = auth!!.currentUser!!.uid
-        }
+        job = Job()
+        db = DatabaseSource.getInstance(applicationContext)
 
         val timeUnit = intent.getIntExtra("Time", 0)
         val distance: Double = intent.getDoubleExtra("Distance", 0.0)
-        docUid = intent.getStringExtra("docUid")!!
+        //Ändrat här nedan
+        docUid = intent.getLongExtra("docUid",0)
         val index = intent.getIntExtra("ind", 0)
         val resultTimeText = makeTimeStr(timeUnit)
         val saveButton = findViewById<Button>(R.id.save)
@@ -52,7 +52,7 @@ class NamingTrack : AppCompatActivity() {
             startActivity(intent)
         }
         cancelButton.setOnClickListener {
-            eraseMapObjects(index)
+            eraseLocationObjects()
 
         }
     }
@@ -78,9 +78,19 @@ class NamingTrack : AppCompatActivity() {
         ).show();
     }
 
-    private fun eraseMapObjects(index: Int) {
+    private fun eraseLocationObjects() {
 
-        for (i in 1..index) {
+            val allLocObj  = loadLocationObjectsByTrack(docUid)
+            launch {
+                allLocObj.await().forEach {
+                    downloadedLocObjects.add(it)
+                }
+                for (locationObject in downloadedLocObjects){
+                    deleteLocationObject(locationObject)
+                    println("LocationObject Deleted!")
+                }
+            }
+        /*for (i in 1..index) {
             db.collection("users").document(myUserUid).collection("maps").document(docUid)
                 .collection("mapObjects").document("$i")
                 .delete().addOnSuccessListener {
@@ -89,12 +99,13 @@ class NamingTrack : AppCompatActivity() {
                 .addOnFailureListener { e ->
                     Log.w(ContentValues.TAG, "!!! Error deleting document", e)
                 }
-
-        }
+        }*/
         eraseTrack()
     }
     fun eraseTrack(){
-        db.collection("users").document(myUserUid).collection("maps").document(docUid).delete()
+        findTrackToDelete()
+
+        /*db.collection("users").document(myUserUid).collection("maps").document(docUid).delete()
             .addOnSuccessListener {
                 println("!!! Tom bana raderades från firestore")
                 onPause()
@@ -102,7 +113,7 @@ class NamingTrack : AppCompatActivity() {
             }
             .addOnFailureListener {
                 println("!!! Tomma banan raderades INTE!")
-            }
+            }*/
     }
     fun goHome(){
         Toast.makeText(
@@ -112,5 +123,28 @@ class NamingTrack : AppCompatActivity() {
     fun goToStartPage(){
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
+    }
+    fun loadLocationObjectsByTrack(locObjTrackId: Long) : Deferred<List<LocationObject>> =
+    async(Dispatchers.IO) {
+        db.locationDao().findByTrack(locObjTrackId)
+    }
+    fun deleteLocationObject(locationObject: LocationObject) {
+        async(Dispatchers.IO) {   db.locationDao().delete(locationObject)
+            println("!!!LocationObject deleted!!")
+        }
+    }
+    fun deleteTrack(track: Track) {
+        async(Dispatchers.IO) {   db.locationDao().delete(track)
+            println("!!!Track deleted!!")
+        }
+    }
+    fun findTrackToDelete(){
+        var track: Track
+        async(Dispatchers.IO) {
+            track = db.locationDao().findTrackById(docUid)
+
+            println("!!!Track located!!")
+            deleteTrack(track)
+        }
     }
 }
