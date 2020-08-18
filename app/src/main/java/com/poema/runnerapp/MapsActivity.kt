@@ -32,7 +32,6 @@ import kotlin.coroutines.CoroutineContext
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickListener,
     GoogleMap.OnMarkerClickListener, CoroutineScope {
 
-    var downloadedTracks = mutableListOf<Track>()
     private lateinit var job: Job
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job
@@ -112,7 +111,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
                 val myDate = getCurrentDateTime()
                 val dateInString = myDate.toString("yyyy-MM-dd HH:mm:ss.SSSSSS")
                 val a = Track(0, 0.0, "", "", dateInString)
-                roomSaveTrack(a) //behövs någon slags completionhandler här!
+                roomSaveTrack(a)
             }
         }
 
@@ -121,24 +120,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(p0: LocationResult) {
                 super.onLocationResult(p0)
-                println("!!! Callback has happened")
                 lastLocation = p0.lastLocation
-                doSomethingWithLastLocation(lastLocation)
-
+                    doSomethingWithLastLocation(lastLocation)
             }
         }
         createLocationRequest()
     }
 
-    //skickar över Tid, längd på banan, trackens UID, antal locations
+    //skickar över Tid, längd på banan, trackens UID
     private fun endStoppingProcedure() {
         startTimer(false)
         onPause()
         val intent = Intent(this, NamingTrack::class.java)
         intent.putExtra("Time", timeUnit)
         intent.putExtra("Distance", totalDistance)
-        //intent.putExtra("docUid", docUid)
-        //Ändrat :
         intent.putExtra("docUid", trackId)
         startActivity(intent)
     }
@@ -206,15 +201,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         fusedLocationClient.requestLocationUpdates(
             locationRequest,
             locationCallback,
-            null /* Looper */
+            null
         )
     }
 
     private fun createLocationRequest() {
 
         locationRequest = LocationRequest()
-        locationRequest.interval = 3000
-        locationRequest.fastestInterval = 2000
+        locationRequest.interval = 4000
+        locationRequest.fastestInterval = 3000
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
 
         val builder = LocationSettingsRequest.Builder()
@@ -256,7 +251,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
                 }
             }
         }
-
     }
 
     override fun onPause() {
@@ -362,7 +356,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             lat,
             lng,
             timeUnit
-        ) //Här är trackId 0 första gången!
+        )
         roomSaveLocationObject(a)
     }
 
@@ -376,9 +370,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     private fun roomSaveLocationObject(locationObject: LocationObject){
         async(Dispatchers.IO) {
             val locId = db.locationDao().insert(locationObject)
-            println("!!!LocationsObject with trackID: $trackId and locObjId: ${locId} saved!!")
-            println("!!!Latitude = ${locationObject.locLat} Longitude = ${locationObject.locLng}")
-
+            println("!!!LocationsObject with trackID: $trackId and locObjId: $locId saved!!")
         }
     }
 

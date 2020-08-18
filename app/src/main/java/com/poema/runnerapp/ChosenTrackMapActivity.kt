@@ -297,8 +297,8 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private fun createLocationRequest() {
 
         locationRequest = LocationRequest()
-        locationRequest.interval = 3000
-        locationRequest.fastestInterval = 2000
+        locationRequest.interval = 4000
+        locationRequest.fastestInterval = 3000
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         val builder = LocationSettingsRequest.Builder()
             .addLocationRequest(locationRequest)
@@ -596,14 +596,12 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 val lo : Long = ind.toLong()
                 val locObj = LocationObject(lo,oldTrackId, accDistResult,latResult,lngResult, timeResult)
                 NewDataManager.newLocationObjects.add(locObj)
-                println("!!! locObjID in newdatamanager lo = $lo")
             }
         }
         // tar de gamla värdena och lägger in dem i den nya listan på rätt platser - varje sekund får ett eget objekt
         for (locationObject in ObjectDataManager.locationObjects) {
 
                 val pos = locationObject.time
-            println("!!! ID ${locationObject.locObjId}, time in seconds: $pos")
                 NewDataManager.newLocationObjects.add(pos, locationObject)
 
         }

@@ -19,7 +19,7 @@ class NamingTrack : AppCompatActivity() , CoroutineScope {
     private lateinit var db : AppDatabase
     override val coroutineContext : CoroutineContext
         get() = Dispatchers.Main + job
-    var downloadedLocObjects = mutableListOf<LocationObject>()
+    private var downloadedLocObjects = mutableListOf<LocationObject>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_naming_track)
