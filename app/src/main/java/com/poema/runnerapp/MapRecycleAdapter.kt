@@ -1,11 +1,9 @@
 package com.poema.runnerapp
 
 import android.app.AlertDialog
-import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,112 +12,90 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
+import kotlinx.coroutines.*
+import kotlin.coroutines.CoroutineContext
 
-class MapRecycleAdapter (private val context : Context, private val maps: List<Map>, private val myUserUid: String): RecyclerView.Adapter<MapRecycleAdapter.ViewHolder>() {
+class MapRecycleAdapter (private val context : Context, private val tracks: List<Track>): RecyclerView.Adapter<MapRecycleAdapter.ViewHolder>(), CoroutineScope {
 
+    var downloadedLocObjects = mutableListOf<LocationObject>()
+    private lateinit var job : Job
+    override val coroutineContext : CoroutineContext
+        get() = Dispatchers.Main + job
+    private lateinit var db : AppDatabase
     private var mapObjectUidIndex = -1
     private var idList = mutableListOf<String>()
-    lateinit var db: FirebaseFirestore
-    private var auth: FirebaseAuth? = null
     private val layoutInflater = LayoutInflater.from(context)
     var loggedIn = false
-    var myUserId = ""
-    private var b = ""
-
-
+    var pos : Int = 0
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        db = FirebaseFirestore.getInstance()
-        auth = FirebaseAuth.getInstance()
-        if (auth != null) {
+        job = Job()
+        db = DatabaseSource.getInstance(context)
             loggedIn = true
-            myUserId = auth!!.currentUser!!.uid
-        }
+
         val itemView = layoutInflater.inflate(R.layout.list_item, parent, false )
         return ViewHolder(itemView)
     }
 
-    override fun getItemCount() = maps.size
+    override fun getItemCount() = tracks.size
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val map = maps[position]
-        holder.textViewName.text = map.name
-        holder.textViewLength.text = "Length: " + String.format("%.0f", map.length)+" meters"//"Length: " + map.length.toString() + "m"
-        holder.textViewTime.text = "Best time: " + map.time
-        val b = map.timeStamp!!
+        val track = tracks[position]
+        holder.textViewName.text = track.name
+        holder.textViewLength.text = "Length: " + String.format("%.0f", track.length)+" meters"
+        holder.textViewTime.text = "Best time: " + track.time
+        val b = track.timestamp
         holder.textViewDate.text = "Set: " + b.substring(0,b.length-10)
         holder.mapPosition = position
     }
-
+    // startar raderingsprocessen här - tar emot positionen som det tryckts på och tar fram roomid:t på den banan
     fun removeTrack(position : Int) {
-        val a = Datamanager.maps[position]
-        if (a.id != null) {
-            b = (a.id!!)
-        }                                    // uid:t på map:pen ifråga -> laddar ner collection av mapObjects som hör till den map:pen.
+        val a = Datamanager.tracks[position]
+        val id = a.trackId
+        pos = position
+        eraseLocationObjects(id)
 
-        val docRef1 = db.collection("users").document(myUserUid).collection("maps").document(b)
-            .collection("mapObjects").orderBy(
-                "time", Query.Direction.DESCENDING
-            )
-        docRef1.get().addOnSuccessListener { documentSnapshot ->
-            ObjectDataManager.locationObjects.clear()                                //tömmer ObjectDatamanager...
-            for (document in documentSnapshot.documents) {
-                val newLocationObject = document.toObject(LocationObject::class.java)
+    }
 
-                if (newLocationObject != null) {
-                    newLocationObject.id =
-                        (document.id)                         //....lägger sedan till dessa mapObjects (som kommer från firestore till objektdatamanager med firestore id
-                    ObjectDataManager.locationObjects.add(newLocationObject)
-                }
+    fun eraseLocationObjects(id : Long) {
+        val allLocObj = loadLocationObjectsByTrack(id)
+        launch {
+            allLocObj.await().forEach {
+                downloadedLocObjects.add(it)
             }
-            for (x in 0 until ObjectDataManager.locationObjects.size) {      //skapar därefter en lista med bara dessa firestore id:n
-                val a = ObjectDataManager.locationObjects[x]
-                idList.add("${a.id}")
+            for (locationObject in downloadedLocObjects) {
+                deleteLocationObject(locationObject)
             }
-            indexingFunction()
-            mapObjectUidIndex = -1
-            deleteMap(position)
-
+            findTrackToDelete(id) //completionHandler efter radering av locobj
         }
     }
 
-    private fun indexingFunction() {                     //går igenom id-listan och aktivera radering av MapObjects för mappen...
-        mapObjectUidIndex++
-        if (mapObjectUidIndex <= idList.size-1) {
-            deleteLocationObjects(mapObjectUidIndex)
+    fun findTrackToDelete(id : Long){
+        var track: Track
+        async(Dispatchers.IO) {
+            track = db.locationDao().findTrackById(id)
+            db.locationDao().delete(track)
+            println("!!!Track with ID: ${track.trackId} located and deleted!!")
+            notifyOnMain()
+        }
+    }
+    suspend fun notifyOnMain(){
+        withContext(Dispatchers.Main){
+            Datamanager.tracks.removeAt(pos)
+            notifyDataSetChanged()
+        }
+    }
+    fun loadLocationObjectsByTrack(locObjTrackId: Long) : Deferred<List<LocationObject>> =
+        async(Dispatchers.IO) {
+            db.locationDao().findLocObjectsByTrackId(locObjTrackId)
+        }
+    fun deleteLocationObject(locationObject: LocationObject) {
+        async(Dispatchers.IO) {   db.locationDao().delete(locationObject)
+            println("!!!LocationObject with id: ${locationObject.locObjId} and track ID: ${locationObject.locObjTrackId} deleted!")
         }
     }
 
-    private fun deleteLocationObjects(mapObjectUidIndex: Int) {             //själva raderingen
-        db.collection("users").document(myUserUid).collection("maps").document(b).collection("mapObjects").document(idList[mapObjectUidIndex])
-            .delete() .addOnSuccessListener {
-                Log.d(TAG, "!!! Document successfully deleted!")
-               indexingFunction()    // går tillbaka till indexingfunction när objektet är raderat - inga trådkrockar!
-            }
-                .addOnFailureListener {
-                        e -> Log.w(TAG, "!!! Error deleting document", e)
-                }
-    }
 
-    private fun deleteMap(position: Int){
-             Datamanager.maps.removeAt(position)
-             println("!!!  ID : "+ b +" och userID: "+myUserUid)
-             db.collection("users").document(myUserUid).collection("maps").document(b).delete()
-                 .addOnSuccessListener {
-                     Log.d(TAG, "!!! Document successfully deleted!")
-                     onDeleteCompletion()
-                 }
-                 .addOnFailureListener {
-                         e -> Log.w(TAG, "!!! Error deleting document", e)
-                 }
-         }
-
-    private fun onDeleteCompletion(){
-        notifyDataSetChanged()
-    }
 
     inner class ViewHolder(itemView : View) : RecyclerView.ViewHolder(itemView) {
 

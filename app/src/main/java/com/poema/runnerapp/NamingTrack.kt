@@ -1,10 +1,8 @@
 package com.poema.runnerapp
 
-import android.content.ContentValues
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -16,7 +14,7 @@ import kotlin.coroutines.CoroutineContext
 class NamingTrack : AppCompatActivity() , CoroutineScope {
 
 
-    private var docUid : Long = 0
+    private var trackId : Long = 0
     private lateinit var job : Job
     private lateinit var db : AppDatabase
     override val coroutineContext : CoroutineContext
@@ -30,9 +28,7 @@ class NamingTrack : AppCompatActivity() , CoroutineScope {
 
         val timeUnit = intent.getIntExtra("Time", 0)
         val distance: Double = intent.getDoubleExtra("Distance", 0.0)
-        //Ändrat här nedan
-        docUid = intent.getLongExtra("docUid",0)
-        val index = intent.getIntExtra("ind", 0)
+        trackId = intent.getLongExtra("docUid",0)
         val resultTimeText = makeTimeStr(timeUnit)
         val saveButton = findViewById<Button>(R.id.save)
         val cancelButton = findViewById<Button>(R.id.cancelBtn)
@@ -47,12 +43,12 @@ class NamingTrack : AppCompatActivity() , CoroutineScope {
             intent.putExtra("name2", trackName)
             intent.putExtra("time2", timeUnit)
             intent.putExtra("distance2", distance)
-            intent.putExtra("docUi", docUid)
+            intent.putExtra("docUi", trackId)//trackId
 
             startActivity(intent)
         }
         cancelButton.setOnClickListener {
-            eraseLocationObjects()
+            findTrackToDelete()
 
         }
     }
@@ -80,41 +76,18 @@ class NamingTrack : AppCompatActivity() , CoroutineScope {
 
     private fun eraseLocationObjects() {
 
-            val allLocObj  = loadLocationObjectsByTrack(docUid)
-            launch {
-                allLocObj.await().forEach {
-                    downloadedLocObjects.add(it)
+                val allLocObj  = loadLocationObjectsByTrack(trackId)
+                launch {
+                    allLocObj.await().forEach {
+                        downloadedLocObjects.add(it)
+                    }
+                    for (locationObject in downloadedLocObjects){
+                        deleteLocationObject(locationObject)
+                    }
+                    switchToMain()
                 }
-                for (locationObject in downloadedLocObjects){
-                    deleteLocationObject(locationObject)
-                    println("LocationObject Deleted!")
-                }
-            }
-        /*for (i in 1..index) {
-            db.collection("users").document(myUserUid).collection("maps").document(docUid)
-                .collection("mapObjects").document("$i")
-                .delete().addOnSuccessListener {
-                    Log.d(ContentValues.TAG, "!!! Document successfully deleted!")
-                }
-                .addOnFailureListener { e ->
-                    Log.w(ContentValues.TAG, "!!! Error deleting document", e)
-                }
-        }*/
-        eraseTrack()
     }
-    fun eraseTrack(){
-        findTrackToDelete()
 
-        /*db.collection("users").document(myUserUid).collection("maps").document(docUid).delete()
-            .addOnSuccessListener {
-                println("!!! Tom bana raderades från firestore")
-                onPause()
-                goHome()
-            }
-            .addOnFailureListener {
-                println("!!! Tomma banan raderades INTE!")
-            }*/
-    }
     fun goHome(){
         Toast.makeText(
             applicationContext, "Your recording has been deleted.",
@@ -126,25 +99,31 @@ class NamingTrack : AppCompatActivity() , CoroutineScope {
     }
     fun loadLocationObjectsByTrack(locObjTrackId: Long) : Deferred<List<LocationObject>> =
     async(Dispatchers.IO) {
-        db.locationDao().findByTrack(locObjTrackId)
+        db.locationDao().findLocObjectsByTrackId(locObjTrackId)
+
     }
     fun deleteLocationObject(locationObject: LocationObject) {
         async(Dispatchers.IO) {   db.locationDao().delete(locationObject)
-            println("!!!LocationObject deleted!!")
+            println("!!!LocationObject with id: ${locationObject.locObjId} and track ID: ${locationObject.locObjTrackId} deleted!")
         }
     }
-    fun deleteTrack(track: Track) {
-        async(Dispatchers.IO) {   db.locationDao().delete(track)
-            println("!!!Track deleted!!")
-        }
-    }
-    fun findTrackToDelete(){
+
+    private fun findTrackToDelete(){
         var track: Track
         async(Dispatchers.IO) {
-            track = db.locationDao().findTrackById(docUid)
-
-            println("!!!Track located!!")
-            deleteTrack(track)
+            track = db.locationDao().findTrackById(trackId)
+            db.locationDao().delete(track)
+            println("!!!Track with ID ${track.trackId} located and deleted!!")
+            eraseLocationObjects()
         }
     }
+    private suspend fun switchToMain(){
+        withContext(Dispatchers.Main){
+            onPause()
+            goHome()
+        }
+    }
+
+
+
 }

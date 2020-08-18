@@ -1,7 +1,6 @@
 package com.poema.runnerapp
 
 import android.app.Activity
-import android.content.ContentValues
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
@@ -26,20 +25,23 @@ import com.google.android.gms.maps.GoogleMap.OnPolylineClickListener
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.GeoPoint
-import com.google.firebase.firestore.Query
+import kotlinx.coroutines.*
+import java.lang.Runnable
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.concurrent.timer
-
+import kotlin.coroutines.CoroutineContext
 
 
 class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickListener,
-    GoogleMap.OnMarkerClickListener, TextToSpeech.OnInitListener
-{
+    GoogleMap.OnMarkerClickListener, TextToSpeech.OnInitListener, CoroutineScope {
 
+    private var newTrackId : Long = 0
+    var oldTrackId : Long = 0
+    private lateinit var job : Job
+    override val coroutineContext : CoroutineContext
+        get() = Dispatchers.Main + job
+    private lateinit var db : AppDatabase
     private lateinit var locationCallback: LocationCallback
     private lateinit var locationRequest: LocationRequest
     private var locationUpdateState = false
@@ -48,7 +50,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
         private const val REQUEST_CHECK_SETTINGS = 2
     }
-
+    var downloadedLocObjects = mutableListOf<LocationObject>()
     var myLocLatLngList = mutableListOf<LatLng>()
     private lateinit var map: GoogleMap
     private var timerStarted = false
@@ -61,10 +63,8 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private var index: Int = 0
     private var location1: Location? = null
     private var location2: Location? = null
-    lateinit var db: FirebaseFirestore
-    lateinit var auth: FirebaseAuth
     var docUid = ""
-    private var myUserUid = ""
+    //private var myUserUid = ""
     private var trackName = ""
     private var myLatLng: LatLng? = null
     private var b = ""
@@ -92,24 +92,23 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         // initialisera speech
-
         tts = TextToSpeech(this,this)
 
+        job = Job()
+        db = DatabaseSource.getInstance(applicationContext)
         //ta emot position
-
         val position = intent.getIntExtra("position", 0)
-        if (Datamanager.maps[position].length != null) {
-        length = Datamanager.maps[position].length!!
-        }
+
+        length = Datamanager.tracks[position].length
+
         val tvLength = findViewById<TextView>(R.id.tvDistanceLeft)
         tvLength.text = String.format("%.0f", (length))
-        if (Datamanager.maps[position].name != null) {
-            trackName = Datamanager.maps[position].name!!
-        }
+
+        trackName = Datamanager.tracks[position].name
 
         // visar ghostmarkern för innevarande sekund och gömmer den förra. Gör detta OM sekunden har bytts
         val handler = Handler()
-        val delay = 250 //milliseconds
+        val delay = 500 //milliseconds
         handler.postDelayed(object : Runnable {
             override fun run() {
                 if (markerList.size > 1 && timeUnit < markerList.size-1  && timerOn != null) {
@@ -132,14 +131,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
 
         val header = findViewById<TextView>(R.id.header)
         header.text = trackName
-
-        //initialiserar firestore och auth
-
-        db = FirebaseFirestore.getInstance()
-        auth = FirebaseAuth.getInstance()
-        if (auth.currentUser != null) {
-            myUserUid = auth.currentUser!!.uid
-        }
 
         //fixar Zoom switchknappen
         val switchBtn = findViewById<Switch>(R.id.switch1)
@@ -172,23 +163,11 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         startButton.setOnClickListener {
             if (timerOn == null && havePressedStart) {
                 havePressedStart = false
-                if (voiceUpdates) speakOut("Start!")
+                if (voiceUpdates) speakOut("Start")
                 val myDate = getCurrentDateTime()
                 val dateInString = myDate.toString("yyyy-MM-dd HH:mm:ss.SSSSSS")
-
-                // Lägger till tom bana i firestore
-
-                val a = Map("", 0.0, "", "", dateInString)
-                println("!!! $a")
-                db.collection("users").document(myUserUid).collection("maps").add(a)
-                    .addOnSuccessListener { uid ->
-                        docUid = uid.id
-                        startingFunction()
-                        println("!!! Tom bana sparades på firestore")
-                    }
-                    .addOnFailureListener {
-                        println("!!! Tomma banan sparades INTE!")
-                    }
+                val a = Track(0, 0.0, "", "", dateInString)
+                roomSaveTrack(a)
             }
         }
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -211,29 +190,29 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         if (voiceUpdates){speakOut("stop")}
         onPause()
         val ghostGoalDistance = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance
-        if (ghostGoalDistance != null) {
+
             val a = 0.1 * ghostGoalDistance     //procentsatsen för när användaren ska anses vara tillräckligt nära mål mätt i ackumulerad distans
             // för att tiden ska kunna räknas som ev rekord. Dessutom ska användaren befinna sig högst 20m från slutpunkten på ghostbanan (målet)
-            val latestLocation = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].locLatLng
+            val latestLocation = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].locLat
+            val latestLocation2 = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].locLng
             val endLocation = Location("Punkt")
-                if (latestLocation != null) {
-                    endLocation.latitude = latestLocation.latitude
-                    endLocation.longitude = latestLocation.longitude
-                }
+
+                    endLocation.latitude = latestLocation
+                    endLocation.longitude = latestLocation2
+
             if (timeUnit < markerList.size && totalDistance > (ghostGoalDistance - a) && location.distanceTo(endLocation) < 20.0) {
                 // vad ska hända när man vunnit
 
                 val intent = Intent(this, DefeatedGhostActivity::class.java)
                 intent.putExtra("Time", timeUnit)
                 intent.putExtra("Distance", totalDistance)
-                intent.putExtra("docUid", docUid)
-                intent.putExtra("ind",index)
+                intent.putExtra("docUid", newTrackId)
                 intent.putExtra("posit", position)
                 startActivity(intent)
             } else {
                 eraseIfLostToGhost()
             }
-        }
+
 
     }
 
@@ -318,8 +297,8 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private fun createLocationRequest() {
 
         locationRequest = LocationRequest()
-        locationRequest.interval = 5000
-        locationRequest.fastestInterval = 4000
+        locationRequest.interval = 3000
+        locationRequest.fastestInterval = 2000
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         val builder = LocationSettingsRequest.Builder()
             .addLocationRequest(locationRequest)
@@ -424,7 +403,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             val distanceLeft = findViewById<TextView>(R.id.tvDistanceLeft)
             val distanceLeftStr = String.format("%.0f", (length - totalDistance))
             distanceLeft.text = distanceLeftStr
-            if (totalDistance < ghostAccDistance!!) {
+            if (totalDistance < ghostAccDistance) {
                 val differ = ghostAccDistance - totalDistance
                 aot.setTextColor(Color.RED)
                 aot.text = "trailing"
@@ -516,16 +495,15 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         lost = true
     }
     private fun saveLocationObject(location:Location){
-        val locGeo = GeoPoint(location.latitude, location.longitude)
-        val a = LocationObject("", locGeo, totalDistance, timeUnit)
-        db.collection("users").document(myUserUid).collection("maps").document(docUid)
-            .collection("mapObjects").document("$index").set(a)
-            .addOnSuccessListener {
-                println("!!! locationObject sparades på firestore")
-            }
-            .addOnFailureListener {
-                println("!!!LocationObject sparades INTE!")
-            }
+        val lat = location.latitude
+        val lng = location.longitude
+        //skapar NYA locationobjects trackID ??
+        val a = LocationObject(0, newTrackId,totalDistance, lat,lng, timeUnit)
+        saveLocationObj(a)
+    }
+    private fun saveLocationObj(locationObject: LocationObject) {
+        async(Dispatchers.IO) {  db.locationDao().insert(locationObject)
+            println("!!!LocationsObject with track # ${locationObject.locObjTrackId} saved!!")}
     }
     override fun onBackPressed() {
         // ser till så man inte kan lämna sidan om timern är på
@@ -536,30 +514,26 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     }
 
     private fun getLocationObjects(position: Int) {
-        val a = Datamanager.maps[position]
-        if (a.id != null) {
-            b = (a.id!!)
-        }                                    // uid:t på map:pen ifråga -> laddar ner collection av mapObjects som hör till den map:pen.
-
-        val docRef1 = db.collection("users").document(myUserUid).collection("maps").document(b)
-            .collection("mapObjects").orderBy(
-                "time", Query.Direction.ASCENDING
-            )
-        docRef1.get().addOnSuccessListener { documentSnapshot ->
-            ObjectDataManager.locationObjects.clear()                                //tömmer ObjectDatamanager...
-            for (document in documentSnapshot.documents) {
-                val newLocationObject = document.toObject(LocationObject::class.java)
-
-                if (newLocationObject != null) {
-                   newLocationObject.id =
-                       (document.id)                         //....lägger sedan till dessa mapObjects (som kommer från firestore till objektdatamanager)
-                    ObjectDataManager.locationObjects.add(newLocationObject)
-                }
+        val a = Datamanager.tracks[position]
+           oldTrackId = a.trackId
+        loadLoc()
+    }
+    private fun loadLoc(){
+        ObjectDataManager.locationObjects.clear() //tömmer ObjectDatamanager...
+        val allLocObj  = loadLocationObjectsByTrack(oldTrackId)
+        launch {
+            allLocObj.await().forEach {
+               ObjectDataManager.locationObjects.add(it)  // lägger in alla locobjects för tracken i Objectdatamanager
+               println("!!! $it")
             }
-            drawPolylines()
-            makeGhost()
+            switchToMain2()
         }
     }
+    //laddar ner LocObj för tracken i ordning(!!)
+    fun loadLocationObjectsByTrack(locObjTrackId: Long) : Deferred<List<LocationObject>> =
+        async(Dispatchers.IO) {
+            db.locationDao().findLocObjectsByTrackId(locObjTrackId)
+        }
     //rita ut den inlästa banan !!
     private fun drawPolylines() {
         val options = PolylineOptions()
@@ -567,12 +541,10 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         options.width(6f)
         options.pattern(PATTERN_POLYLINE_DOTTED)
         for (locationObject in ObjectDataManager.locationObjects) {
-            if (locationObject.locLatLng != null) {
-                val lat: Double = locationObject.locLatLng!!.latitude
-                val lng: Double = locationObject.locLatLng!!.longitude
+                val lat: Double = locationObject.locLat
+                val lng: Double = locationObject.locLng
                 myLatLng = LatLng(lat, lng)
-                options.add(myLatLng!!)
-            }
+                options.add(myLatLng)
         }
         map.addPolyline(options)
     }
@@ -591,14 +563,14 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             var accDistResult : Double
             var timeResult: Int
 
-            val lat1 = object1.locLatLng!!.latitude
-            val lng1 = object1.locLatLng!!.longitude
-            val time1 = object1.time!!
-            val accDist1 = object1.accDistance!!
-            val lat2 = object2.locLatLng!!.latitude
-            val lng2 = object2.locLatLng!!.longitude
-            val time2 = object2.time!!
-            val accDist2 = object2.accDistance!!
+            val lat1 = object1.locLat
+            val lng1 = object1.locLng
+            val time1 = object1.time
+            val accDist1 = object1.accDistance
+            val lat2 = object2.locLat
+            val lng2 = object2.locLng
+            val time2 = object2.time
+            val accDist2 = object2.accDistance
 
             val latDiff = lat2 - lat1
             val lngDiff = lng2 - lng1
@@ -618,24 +590,28 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 lngResult = lngPieces
                 accDistResult = accDistPieces
                 timeResult = time1 + ind
+
             //skapar de framkalkylerade objekten och lägger in i newdatamanager
-                val locGeo = GeoPoint(latResult, lngResult)
-                val locObj = LocationObject("$ind", locGeo, accDistResult, timeResult)
+                //val locGeo = GeoPoint(latResult, lngResult)
+                val lo : Long = ind.toLong()
+                val locObj = LocationObject(lo,oldTrackId, accDistResult,latResult,lngResult, timeResult)
                 NewDataManager.newLocationObjects.add(locObj)
+                println("!!! locObjID in newdatamanager lo = $lo")
             }
         }
         // tar de gamla värdena och lägger in dem i den nya listan på rätt platser - varje sekund får ett eget objekt
         for (locationObject in ObjectDataManager.locationObjects) {
 
-                val pos = locationObject.time!!
+                val pos = locationObject.time
+            println("!!! ID ${locationObject.locObjId}, time in seconds: $pos")
                 NewDataManager.newLocationObjects.add(pos, locationObject)
 
         }
         // lägger till markers enligt de skapade objekten, på kartan och gör dem osynliga tillsvidare - förutom start och slut marker
         for ((i, locationObject) in NewDataManager.newLocationObjects.withIndex()) {
-
-            val lt1 = locationObject.locLatLng!!.latitude
-            val lg1 = locationObject.locLatLng!!.longitude
+            println("!!! $locationObject with index: $i")
+            val lt1 = locationObject.locLat
+            val lg1 = locationObject.locLng
 
             val icon = BitmapDescriptorFactory.fromResource(R.drawable.testmarkerii)
             when (i) {
@@ -660,33 +636,47 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
 
     private fun eraseIfLostToGhost(){
 
-        for (i in 1..index){
-            db.collection("users").document(myUserUid).collection("maps").document(docUid).collection("mapObjects").document("$i")
-                .delete() .addOnSuccessListener {
-                    Log.d(ContentValues.TAG, "!!! Document successfully deleted!")
-                }
-                .addOnFailureListener {
-                        e -> Log.w(ContentValues.TAG, "!!! Error deleting document", e)
-                }
+        eraseLocationObjects(newTrackId)
 
+    }
+    fun eraseLocationObjects(id : Long) {
+
+        val allLocObj = loadLocationObjectsByTrack(id)
+        launch {
+            allLocObj.await().forEach {
+                downloadedLocObjects.add(it)
+            }
+            for (locationObject in downloadedLocObjects) {
+                deleteLocationObject(locationObject)
+            }
+            findTrackToDelete(id) //completionHandler efter radering av locobj
         }
-        eraseCollection()
+    }
+    fun deleteTrack(track: Track) {
+        async(Dispatchers.IO) {   db.locationDao().delete(track)
+            println("!!!Track deleted!!")
+            switchToMain()
+        }
+
+    }
+    fun findTrackToDelete(id : Long){
+        var track: Track
+        async(Dispatchers.IO) {
+            track = db.locationDao().findTrackById(id)
+
+            println("!!!Track located!!")
+            deleteTrack(track)
+        }
+    }
+    fun deleteLocationObject(locationObject: LocationObject) {
+        async(Dispatchers.IO) {   db.locationDao().delete(locationObject)
+            println("!!!LocationObject deleted!!")
+        }
     }
     private fun speakOut(text:String) {
         tts!!.speak(text, TextToSpeech.QUEUE_FLUSH, null,"")
     }
 
-    private fun eraseCollection(){
-                db.collection("users").document(myUserUid).collection("maps").document(docUid).delete()
-                    .addOnSuccessListener {
-                        println("!!! Tom bana raderades från firestore")
-                        onPause()
-                        goHome()
-                    }
-                    .addOnFailureListener {
-                        println("!!! Tomma banan raderades INTE!")
-                    }
-    }
     private fun goHome(){
         val a: String = if (lost) {
                 "Your record attempt has been deleted"
@@ -709,6 +699,30 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             tts!!.shutdown()
         }
         super.onDestroy()
+    }
+
+    private fun roomSaveTrack(track: Track){
+        async(Dispatchers.IO) {
+            newTrackId = db.locationDao().insert(track)
+            println("!!!Track with trackID $newTrackId saved!!")
+            switchToMain()
+        }
+    }
+    private suspend fun switchToMain(){
+        withContext(Dispatchers.Main){
+            if (lost){onPause()
+                println("!!! Detta bör vara sista texten som syns!!")
+                goHome()}
+            else{
+            startingFunction()
+            }
+        }
+    }
+    private suspend fun switchToMain2(){
+        withContext(Dispatchers.Main){
+            drawPolylines()
+            makeGhost()
+        }
     }
 }
 

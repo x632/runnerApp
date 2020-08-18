@@ -33,18 +33,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     GoogleMap.OnMarkerClickListener, CoroutineScope {
 
     var downloadedTracks = mutableListOf<Track>()
-    private lateinit var job : Job
-    override val coroutineContext : CoroutineContext
+    private lateinit var job: Job
+    override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job
-    private lateinit var db : AppDatabase
+    private lateinit var db: AppDatabase
 
     private lateinit var locationCallback: LocationCallback
     private lateinit var locationRequest: LocationRequest
     private var locationUpdateState = false
+
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
         private const val REQUEST_CHECK_SETTINGS = 2
     }
+
     var myLocLatLngList = mutableListOf<LatLng>()
     private lateinit var map: GoogleMap
     private var timerStarted = false
@@ -53,11 +55,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var lastLocation: Location
     private var totalDistance = 0.0
-    private var distance : Float = 0.0f
-    private var index : Int = 0
-    private var location1 : Location? = null
-    private var location2 : Location? = null
-    private var trackId : Long = 0
+    private var distance: Float = 0.0f
+    private var index: Int = 0
+    private var location1: Location? = null
+    private var location2: Location? = null
+    private var trackId: Long = 0
     private var havePressedStart = true
     private var havePressedStop = true
     private var zoomUpdate = true
@@ -77,12 +79,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         mapFragment.getMapAsync(this)
         //håller skrämen på!
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        //firebase autentisering
-       //raderad...
 
         //fixar switchknappen
         val mySwitchBtn = findViewById<Switch>(R.id.mySwitch)
-        mySwitchBtn.setOnCheckedChangeListener{_, isChecked ->
+        mySwitchBtn.setOnCheckedChangeListener { _, isChecked ->
             zoomUpdate = isChecked
         }
 
@@ -93,15 +93,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             if (timerOn != null && havePressedStop) {
                 havePressedStop = false
                 fusedLocationClient.lastLocation
-                    .addOnSuccessListener { location : Location? ->
-                        if (location != null){
+                    .addOnSuccessListener { location: Location? ->
+                        if (location != null) {
                             lastLoc = true
-                    doSomethingWithLastLocation(location)
+                            doSomethingWithLastLocation(location)
                         }
-                        println("!!! I-samband-med-stop-location sparad")
+                        println("!!! Sista location:")
                         endStoppingProcedure()
                     }
-            }
+             }
         }
 
         val startButton = findViewById<Button>(R.id.startbutton)
@@ -111,41 +111,27 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
                 havePressedStart = false
                 val myDate = getCurrentDateTime()
                 val dateInString = myDate.toString("yyyy-MM-dd HH:mm:ss.SSSSSS")
-
-                //Ändrar här nedan till room - sparar tom bana
-
-                //val a = Map("", 0.0, "", "", dateInString)
-                val a = Track(0,0.0,"","",dateInString)
-                roomSaveTrack(a)
-                // doc Uid återstår att lösa
-
-               /* db.collection("users").document(myUserUid).collection("maps").add(a)
-                    .addOnSuccessListener { uid ->
-                        docUid = uid.id
-                        startingFunction() //OBS OBS denna är flyttad till completion handler i roomSaveTrack istället
-                        println("!!! Tom bana sparades!")
-                    }
-                    .addOnFailureListener {
-                        println("!!! Tomma banan sparades INTE!")
-                    }*/
-
+                val a = Track(0, 0.0, "", "", dateInString)
+                roomSaveTrack(a) //behövs någon slags completionhandler här!
             }
         }
+
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(p0: LocationResult) {
                 super.onLocationResult(p0)
-
+                println("!!! Callback has happened")
                 lastLocation = p0.lastLocation
                 doSomethingWithLastLocation(lastLocation)
+
             }
         }
         createLocationRequest()
     }
 
     //skickar över Tid, längd på banan, trackens UID, antal locations
-    private fun endStoppingProcedure(){
+    private fun endStoppingProcedure() {
         startTimer(false)
         onPause()
         val intent = Intent(this, NamingTrack::class.java)
@@ -154,17 +140,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         //intent.putExtra("docUid", docUid)
         //Ändrat :
         intent.putExtra("docUid", trackId)
-        intent.putExtra("ind",index)
         startActivity(intent)
     }
+
     private fun getCurrentDateTime(): Date {
         return getInstance().time
     }
+
     private fun Date.toString(format: String, locale: Locale = Locale.getDefault()): String {
         val formatter = SimpleDateFormat(format, locale)
         return formatter.format(this)
     }
-    private fun startingFunction (){
+
+    private fun startingFunction() {
         val header = findViewById<TextView>(R.id.header)
         header.text = "Running.."
         startTimer(true)
@@ -200,6 +188,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
 
         setUpMap()
     }
+
     private fun startLocationUpdates() {
 
         if (ActivityCompat.checkSelfPermission(
@@ -220,11 +209,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             null /* Looper */
         )
     }
+
     private fun createLocationRequest() {
 
         locationRequest = LocationRequest()
-        locationRequest.interval = 5000
-        locationRequest.fastestInterval = 4000
+        locationRequest.interval = 3000
+        locationRequest.fastestInterval = 2000
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
 
         val builder = LocationSettingsRequest.Builder()
@@ -235,8 +225,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
 
         task.addOnSuccessListener {
             locationUpdateState = true
-            if(timerOn != null){
-            startLocationUpdates()}
+            if (timerOn != null) {
+                startLocationUpdates()
+            }
         }
         task.addOnFailureListener { e ->
 
@@ -254,25 +245,29 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             }
         }
     }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CHECK_SETTINGS) {
             if (resultCode == Activity.RESULT_OK) {
-               locationUpdateState = true
-                if(timerOn != null){
-                startLocationUpdates()}
+                locationUpdateState = true
+                if (timerOn != null) {
+                    startLocationUpdates()
+                }
             }
         }
 
     }
+
     override fun onPause() {
         super.onPause()
         fusedLocationClient.removeLocationUpdates(locationCallback)
     }
+
     public override fun onResume() {
         super.onResume()
-        if (timerOn!=null) {  //!locationUpdateState
-           startLocationUpdates()
+        if (timerOn != null) {  //!locationUpdateState
+            startLocationUpdates()
         }
     }
 
@@ -300,111 +295,104 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             }
         }
     }
+
     override fun onMarkerClick(p0: Marker?) = false
     override fun onPolylineClick(p0: Polyline?) {
     }
-    private fun doSomethingWithLastLocation(location:Location) {
+
+    private fun doSomethingWithLastLocation(location: Location) {
         myLocationsList.add(location)
         val speed = location.speed
         val speedText = findViewById<TextView>(R.id.speedvalue)
-        speedText.text = String.format("%.1f", speed)+" m/sec"
+        speedText.text = String.format("%.1f", speed) + " m/sec"
         index++
 
         //räknar ut medelfarten
 
-        for (location in myLocationsList){
+        for (location in myLocationsList) {
             val a = location
             avgSpeed += a.speed
         }
         avgSpeed /= index
         val tvSpeedValue = findViewById<TextView>(R.id.tvAvgSpeedValue)
-        tvSpeedValue.text = String.format("%.1f", avgSpeed)+" m/sec"
+        tvSpeedValue.text = String.format("%.1f", avgSpeed) + " m/sec"
         statAvgSpeed = String.format("%.1f", avgSpeed)
         avgSpeed = 0.0
 
         //räknar ut distansen
 
-        if (index%2 == 0){
+        if (index % 2 == 0) {
             location2 = location
         } else {
-            location1 = location}
-        if (index>1 && location1 != null && location2 != null){
+            location1 = location
+        }
+        if (index > 1 && location1 != null && location2 != null) {
             distance = location1!!.distanceTo(location2!!)
             totalDistance += distance
         }
         val currentLatLng = LatLng(lastLocation.latitude, lastLocation.longitude)
         myLocLatLngList.add(currentLatLng)
-        if (myLocLatLngList.size>1){
+        if (myLocLatLngList.size > 1) {
             val options = PolylineOptions()
             options.color(Color.BLUE)
             options.width(6f)
-            for (LatLng in myLocLatLngList) {options.add(LatLng)}
+            for (LatLng in myLocLatLngList) {
+                options.add(LatLng)
+            }
             map.addPolyline(options)
         }
 
         val distV = findViewById<TextView>(R.id.distancevalue)
-        distV.text = String.format("%.0f", totalDistance)+" meters"
+        distV.text = String.format("%.0f", totalDistance) + " meters"
         if (zoomUpdate) {
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 16f))
         }
-       saveLocationObject(location)
+        saveLocationObject(location)
     }
 
-    private fun saveLocationObject(location: Location){
-        val a : LocationObject
-        val lat =  location.latitude
+    private fun saveLocationObject(location: Location) {
+        val a: LocationObject
+        val lat = location.latitude
         val lng = location.longitude
-        if (lastLoc) {
-            //Ändrar här till room Obs : Sista location sätter noll på båda id:na tillsvidare
-            //a = LocationObject("Sista location!!",locGeo, totalDistance, timeUnit)
-            a = LocationObject(0,trackId,totalDistance,lat,lng,timeUnit)
 
-            lastLoc = false
-        }
-        else {
-            //Ändrar till Room....
-            //a = LocationObject("", locGeo, totalDistance, timeUnit)
-            a = LocationObject(0,trackId,totalDistance,lat,lng,timeUnit)
-        }
-
+        a = LocationObject(
+            0,
+            trackId,
+            totalDistance,
+            lat,
+            lng,
+            timeUnit
+        ) //Här är trackId 0 första gången!
         roomSaveLocationObject(a)
-            /*db.collection("users").document(myUserUid).collection("maps").document(docUid)
-                .collection("mapObjects").document("$index").set(a)
-                .addOnSuccessListener {
-                    println("!!! locationObject sparades på firestore")
-                }
-                .addOnFailureListener {
-                    println("!!!LocationObject sparades INTE!")
-                }*/
-
     }
+
     override fun onBackPressed() {
         if (timerOn == null) {
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
         }
     }
+
     private fun roomSaveLocationObject(locationObject: LocationObject){
-        async(Dispatchers.IO) {   this@MapsActivity.db.locationDao().insert(locationObject)
-            println("!!!LocationsObject saved!!")}
-
-    }
-    fun roomLoadTracks(){
-        val allTracks  = loadAllTracks()
-        launch {
-            allTracks.await().forEach {
-                downloadedTracks.add(it)
-            }
-        }
-    }
-    fun loadAllTracks() : Deferred<List<Track>>  =
         async(Dispatchers.IO) {
-            db.locationDao().getAllTracks()
-        }
-    fun roomSaveTrack(track: Track) {
+            val locId = db.locationDao().insert(locationObject)
+            println("!!!LocationsObject with trackID: $trackId and locObjId: ${locId} saved!!")
+            println("!!!Latitude = ${locationObject.locLat} Longitude = ${locationObject.locLng}")
 
-        async(Dispatchers.IO) {   trackId = db.locationDao().insert(track)
+        }
+    }
+
+private fun roomSaveTrack(track: Track){
+        async(Dispatchers.IO) {
+            trackId = db.locationDao().insert(track)
             println("!!!Track with trackID $trackId saved!!")
-            startingFunction()}
+            switchToMain()
+        }
+    }
+    private suspend fun switchToMain(){
+        withContext(Dispatchers.Main){
+            startingFunction()
+        }
     }
 }
+
