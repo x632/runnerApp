@@ -82,6 +82,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private var speechIsInitialized = false
     private var trailing: Boolean = true
     private var voiceUpdates: Boolean = true
+    private var pressedEarly = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -121,7 +122,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                     }
 
                 }
-                if (markerList.size > 1 && timeUnit >= markerList.size-1){haveLost("från handler") }
+                if (markerList.size > 1 && timeUnit >= NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].time){haveLost("från handler") }
                 if (!lost)
                 {
                 handler.postDelayed(this, delay.toLong())}
@@ -199,8 +200,8 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
 
                     endLocation.latitude = latestLocation
                     endLocation.longitude = latestLocation2
-
-            if (timeUnit < markerList.size && totalDistance > (ghostGoalDistance - a) && location.distanceTo(endLocation) < 20.0) {
+            println("!!!timunit: $timeUnit markerlist size ${markerList.size}")
+            if (timeUnit < NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].time && totalDistance > (ghostGoalDistance - a) && location.distanceTo(endLocation) < 20.0) {
                 // vad ska hända när man vunnit
 
                 val intent = Intent(this, DefeatedGhostActivity::class.java)
@@ -210,6 +211,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 intent.putExtra("posit", position)
                 startActivity(intent)
             } else {
+                pressedEarly = true
                 eraseIfLostToGhost()
             }
 
@@ -335,7 +337,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 }
             }
         }
-
     }
 
     override fun onPause() {
@@ -626,14 +627,16 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                         MarkerOptions().position(LatLng(lt1, lg1)).icon(icon).visible(false)
                     )
                     markerList.add(marker)
+
                 }
             }
         }
-
+        println("!!!MarkerListsize - borde vara 37? : ${markerList.size}")
+        println("!!! Time på sista newdatamanger objektet :${NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].time}")
     }
 
     private fun eraseIfLostToGhost(){
-
+        println("!!! Varit i erase if lost to ghost")
         eraseLocationObjects(newTrackId)
 
     }
@@ -650,13 +653,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             findTrackToDelete(id) //completionHandler efter radering av locobj
         }
     }
-    fun deleteTrack(track: Track) {
-        async(Dispatchers.IO) {   db.locationDao().delete(track)
-            println("!!!Track deleted!!")
-            switchToMain()
-        }
-
-    }
     fun findTrackToDelete(id : Long){
         var track: Track
         async(Dispatchers.IO) {
@@ -666,6 +662,24 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             deleteTrack(track)
         }
     }
+    fun deleteTrack(track: Track) {
+        async(Dispatchers.IO) {   db.locationDao().delete(track)
+            println("!!!Track deleted!!")
+            switchToMain()
+        }
+
+    }
+    private suspend fun switchToMain(){
+        withContext(Dispatchers.Main){
+            if (lost || pressedEarly){onPause()
+                println("!!! Varit i switchToMain. Detta bör vara sista texten som syns!!")
+                goHome()}
+            else{
+                startingFunction()
+            }
+        }
+    }
+
     fun deleteLocationObject(locationObject: LocationObject) {
         async(Dispatchers.IO) {   db.locationDao().delete(locationObject)
             println("!!!LocationObject deleted!!")
@@ -704,16 +718,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             newTrackId = db.locationDao().insert(track)
             println("!!!Track with trackID $newTrackId saved!!")
             switchToMain()
-        }
-    }
-    private suspend fun switchToMain(){
-        withContext(Dispatchers.Main){
-            if (lost){onPause()
-                println("!!! Detta bör vara sista texten som syns!!")
-                goHome()}
-            else{
-            startingFunction()
-            }
         }
     }
     private suspend fun switchToMain2(){
