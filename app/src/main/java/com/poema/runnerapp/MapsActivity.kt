@@ -1,12 +1,16 @@
 package com.poema.runnerapp
 
 import android.app.Activity
+import android.Manifest
+import android.app.AlertDialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
 import android.os.Bundle
+import android.os.Looper
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.Switch
@@ -15,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
+import com.google.android.gms.location.LocationServices.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.GoogleMap.OnPolylineClickListener
@@ -32,11 +37,11 @@ import kotlin.coroutines.CoroutineContext
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickListener,
     GoogleMap.OnMarkerClickListener, CoroutineScope {
 
+
     private lateinit var job: Job
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job
     private lateinit var db: AppDatabase
-
     private lateinit var locationCallback: LocationCallback
     private lateinit var locationRequest: LocationRequest
     private var locationUpdateState = false
@@ -73,6 +78,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         setContentView(R.layout.activity_maps)
         job = Job()
         db = DatabaseSource.getInstance(applicationContext)
+        fusedLocationClient = getFusedLocationProviderClient(this)
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
@@ -84,24 +90,29 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         mySwitchBtn.setOnCheckedChangeListener { _, isChecked ->
             zoomUpdate = isChecked
         }
-
         //STOP-Knappen
         val stopButton = findViewById<Button>(R.id.stopButton)
         stopButton.setOnClickListener {
 
             if (timerOn != null && havePressedStop) {
                 havePressedStop = false
-                fusedLocationClient.lastLocation
-                    .addOnSuccessListener { location: Location? ->
-                        if (location != null) {
-                            lastLoc = true
-                            doSomethingWithLastLocation(location)
+                if (ActivityCompat.checkSelfPermission(
+                        this,
+                        android.Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED){
+                        fusedLocationClient.lastLocation
+                        .addOnSuccessListener { location: Location? ->
+                            if (location != null) {
+                                lastLoc = true
+                                doSomethingWithLastLocation(location)
+                            }
+                            println("!!! Sista location:")
+                            endStoppingProcedure()
                         }
-                        println("!!! Sista location:")
-                        endStoppingProcedure()
-                    }
-             }
+                }
+            }
         }
+
 
         val startButton = findViewById<Button>(R.id.startbutton)
         startButton.setOnClickListener {
@@ -115,12 +126,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             }
         }
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
         locationCallback = object : LocationCallback() {
-            override fun onLocationResult(p0: LocationResult) {
-                super.onLocationResult(p0)
-                lastLocation = p0.lastLocation
+            override fun onLocationResult(locationResult: LocationResult?) {
+                locationResult ?: return
+                 for (location in locationResult.locations) {
+                  lastLocation = location
+                 }
                     doSomethingWithLastLocation(lastLocation)
             }
         }
@@ -176,7 +187,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         }
     }
 
-
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
         map.uiSettings.isZoomControlsEnabled = true
@@ -201,7 +211,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         fusedLocationClient.requestLocationUpdates(
             locationRequest,
             locationCallback,
-            null
+            Looper.getMainLooper()
         )
     }
 
@@ -215,7 +225,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         val builder = LocationSettingsRequest.Builder()
             .addLocationRequest(locationRequest)
 
-        val client = LocationServices.getSettingsClient(this)
+        val client = getSettingsClient(this)
         val task = client.checkLocationSettings(builder.build())
 
         task.addOnSuccessListener {
@@ -241,6 +251,43 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         }
     }
 
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray
+    ) {
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                println("Perfekt tack för tillåtelsen!")
+                this.recreate()
+            }else {
+                showAlert()
+            }
+        }
+    }
+    private fun showAlert(){
+        // when button is clicked, show the alert
+            // build alert dialog
+            val dialogBuilder = AlertDialog.Builder(this)
+
+            // set message of alert dialog
+            dialogBuilder.setMessage("RunnerApp needs to use your location data in order to save your tracks. The tracks are only stored locally on your phone. No one but you have access. Do you want to close this application?")
+                // if the dialog is cancelable
+                .setCancelable(false)
+                // positive button text and action
+                .setPositiveButton("Close", DialogInterface.OnClickListener {
+                        dialog, id -> finishAffinity()
+                })
+                // negative button text and action
+                .setNegativeButton("Cancel", DialogInterface.OnClickListener {
+                        dialog, id -> recreate()
+                })
+
+            // create dialog box
+            val alert = dialogBuilder.create()
+            // set title for alert dialog box
+            alert.setTitle("Close the app")
+            // show alert dialog
+            alert.show()
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CHECK_SETTINGS) {
@@ -251,6 +298,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
                 }
             }
         }
+
     }
 
     override fun onPause() {
@@ -291,6 +339,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     }
 
     override fun onMarkerClick(p0: Marker?) = false
+
     override fun onPolylineClick(p0: Polyline?) {
     }
 
@@ -298,7 +347,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         myLocationsList.add(location)
         val speed = location.speed
         val speedText = findViewById<TextView>(R.id.speedvalue)
-        speedText.text = String.format("%.1f", speed) + " m/sec"
+        speedText.text = String.format("%.1f", (speed*3600)*.001) + " km/h"
         index++
 
         //räknar ut medelfarten
@@ -307,10 +356,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             val a = location
             avgSpeed += a.speed
         }
-        avgSpeed /= index
+        avgSpeed /= (myLocationsList.size-1)
         val tvSpeedValue = findViewById<TextView>(R.id.tvAvgSpeedValue)
-        tvSpeedValue.text = String.format("%.1f", avgSpeed) + " m/sec"
-        statAvgSpeed = String.format("%.1f", avgSpeed)
+        val avgSpeed2 = ((avgSpeed * 3600) * .001)
+            if (myLocationsList.size>1) {
+            tvSpeedValue.text = String.format("%.1f", avgSpeed2) + " km/h"
+        }
+            //statAvgSpeed = String.format("%.1f", avgSpeed)
         avgSpeed = 0.0
 
         //räknar ut distansen
@@ -337,7 +389,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         }
 
         val distV = findViewById<TextView>(R.id.distancevalue)
-        distV.text = String.format("%.0f", totalDistance) + " meters"
+        val temp = String.format("%.0f", totalDistance) + " meters"
+        distV.text = temp
         if (zoomUpdate) {
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 16f))
         }
@@ -374,13 +427,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         }
     }
 
-private fun roomSaveTrack(track: Track){
+    private fun roomSaveTrack(track: Track){
         async(Dispatchers.IO) {
             trackId = db.locationDao().insert(track)
             println("!!!Track with trackID $trackId saved!!")
             switchToMain()
         }
     }
+
     private suspend fun switchToMain(){
         withContext(Dispatchers.Main){
             startingFunction()

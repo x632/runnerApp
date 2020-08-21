@@ -63,11 +63,8 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private var index: Int = 0
     private var location1: Location? = null
     private var location2: Location? = null
-    var docUid = ""
-    //private var myUserUid = ""
     private var trackName = ""
     private var myLatLng: LatLng? = null
-    private var b = ""
     private val DOT: PatternItem = Dot()
     private val GAP: PatternItem = Gap(8F)
     private val PATTERN_POLYLINE_DOTTED = listOf(GAP, DOT)
@@ -148,6 +145,10 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         val stopButton = findViewById<Button>(R.id.stopbtn)
         stopButton.setOnClickListener {
             if (timerOn != null && havePressedStop == true) {
+                if (ActivityCompat.checkSelfPermission(
+                        this,
+                        android.Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED){
                 havePressedStop = false
                 fusedLocationClient.lastLocation
                     .addOnSuccessListener { location : Location? ->
@@ -157,6 +158,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                             endStoppingProcedure(position, location)
                         }
                     }
+                }
             }
         }
         //fixar startknappen
@@ -174,12 +176,11 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         locationCallback = object : LocationCallback() {
-            override fun onLocationResult(p0: LocationResult) {
-                super.onLocationResult(p0)
-
-                lastLocation = p0.lastLocation
-
-                println("!!! timeunit: $timeUnit")
+            override fun onLocationResult(locationResult: LocationResult?) {
+                locationResult ?: return
+                for (location in locationResult.locations) {
+                    lastLocation = location
+                }
                 doSomethingWithLastLocation(lastLocation)
             }
         }
@@ -373,7 +374,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             }
         }
     }
-
     override fun onMarkerClick(p0: Marker?): Boolean {
         return false
     }
@@ -412,7 +412,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 aotValue.setTextColor(Color.RED)
                 aotValue.text = str
                 val differInt= str.substring(0,str.length-1).toInt()
-                var speakString = ""
+                var speakString : String
                 if (!trailing && index > 0) {
                     when (differInt) {
                         1 -> {
@@ -504,7 +504,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     }
     private fun saveLocationObj(locationObject: LocationObject) {
         async(Dispatchers.IO) {  db.locationDao().insert(locationObject)
-            println("!!!LocationsObject with track # ${locationObject.locObjTrackId} saved!!")}
+            println("!!!LocationsObject with time: ${locationObject.time} and track # ${locationObject.locObjTrackId} saved!!")}
     }
     override fun onBackPressed() {
         // ser till så man inte kan lämna sidan om timern är på
@@ -525,7 +525,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         launch {
             allLocObj.await().forEach {
                ObjectDataManager.locationObjects.add(it)  // lägger in alla locobjects för tracken i Objectdatamanager
-               println("!!! $it")
+              // println("!!! $it")
             }
             switchToMain2()
         }
@@ -608,7 +608,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         }
         // lägger till markers enligt de skapade objekten, på kartan och gör dem osynliga tillsvidare - förutom start och slut marker
         for ((i, locationObject) in NewDataManager.newLocationObjects.withIndex()) {
-            println("!!! $locationObject with index: $i")
             val lt1 = locationObject.locLat
             val lg1 = locationObject.locLng
 
@@ -631,7 +630,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 }
             }
         }
-        println("!!!MarkerListsize - borde vara 37? : ${markerList.size}")
+        println("!!!MarkerListsize : ${markerList.size}")
         println("!!! Time på sista newdatamanger objektet :${NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].time}")
     }
 
@@ -664,7 +663,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     }
     fun deleteTrack(track: Track) {
         async(Dispatchers.IO) {   db.locationDao().delete(track)
-            println("!!!Track deleted!!")
+            println("!!!Track with id ${track.trackId} deleted!!")
             switchToMain()
         }
 
@@ -682,7 +681,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
 
     fun deleteLocationObject(locationObject: LocationObject) {
         async(Dispatchers.IO) {   db.locationDao().delete(locationObject)
-            println("!!!LocationObject deleted!!")
+            println("!!!LocationObject with time ${locationObject.time} and trackID ${locationObject.locObjTrackId} deleted!!")
         }
     }
     private fun speakOut(text:String) {

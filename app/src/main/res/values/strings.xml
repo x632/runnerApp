@@ -8,8 +8,8 @@
     <string name="timervalue">00:00:00</string>
     <string name="distance">Distance ran:</string>
     <string name="Speed">Speed:</string>
-    <string name="distancevalue">0m</string>
-    <string name="avgspeedvalue">0m/sec</string>
+    <string name="distancevalue">0 m</string>
+    <string name="avgspeedvalue">0 km/h</string>
     <string name="headernaming">Enter a name for your track</string>
     <string name="length">Length:</string>
     <string name="time">Time:</string>
@@ -33,7 +33,7 @@
     <string name="Update">UPDATE</string>
     <string name="move_map_and_zoom_automatically">Move and zoom map automatically    </string>
     <string name="average_speed">Average speed:</string>
-    <string name="_0m_sec">0m/sec</string>
+    <string name="_0m_sec">0 km/h</string>
     <string name="you_are">You are</string>
     <string name="trackname">Trackname</string>
     <string name="distance_to_goal">Distance to goal:</string>
