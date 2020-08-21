@@ -160,7 +160,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
 
     private fun startingFunction() {
         val header = findViewById<TextView>(R.id.header)
-        header.text = "Running.."
+        header.text = getString(R.string.running2)
         startTimer(true)
         onResume()
 
@@ -347,7 +347,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         myLocationsList.add(location)
         val speed = location.speed
         val speedText = findViewById<TextView>(R.id.speedvalue)
-        speedText.text = String.format("%.1f", (speed*3600)*.001) + " km/h"
+        val temp2 = String.format("%.1f", (speed*3600)*.001) + getString(R.string.kmh2)
+        speedText.text = temp2
         index++
 
         //räknar ut medelfarten
@@ -360,7 +361,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         val tvSpeedValue = findViewById<TextView>(R.id.tvAvgSpeedValue)
         val avgSpeed2 = ((avgSpeed * 3600) * .001)
             if (myLocationsList.size>1) {
-            tvSpeedValue.text = String.format("%.1f", avgSpeed2) + " km/h"
+                val temp = String.format("%.1f", avgSpeed2) + getString(R.string.kmh)
+            tvSpeedValue.text = temp
         }
             //statAvgSpeed = String.format("%.1f", avgSpeed)
         avgSpeed = 0.0
@@ -389,7 +391,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         }
 
         val distV = findViewById<TextView>(R.id.distancevalue)
-        val temp = String.format("%.0f", totalDistance) + " meters"
+        val temp = String.format("%.0f", totalDistance) + getString(R.string.meters)
         distV.text = temp
         if (zoomUpdate) {
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 16f))

@@ -241,7 +241,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     }
     private fun startingFunction () {
         val header = findViewById<TextView>(R.id.header)
-        header.text = "Running.."
+        header.text = getString(R.string.running)
         startTimer(true)
         onResume()
     }
@@ -407,7 +407,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             if (totalDistance < ghostAccDistance) {
                 val differ = ghostAccDistance - totalDistance
                 aot.setTextColor(Color.RED)
-                aot.text = "trailing"
+                aot.text = getString(R.string.trailing)
                 val str = String.format("%.0f", (differ)) + "m"
                 aotValue.setTextColor(Color.RED)
                 aotValue.text = str
@@ -433,7 +433,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 } else {
                 val differ = totalDistance - ghostAccDistance
                 aot.setTextColor(Color.GREEN)
-                aot.text = "ahead"
+                aot.text = getString(R.string.ahead)
                 aotValue.setTextColor(Color.GREEN)
                 val str = String.format("%.0f", (differ)) + "m"
                 aotValue.text = str
@@ -492,7 +492,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         val resultText = findViewById<TextView>(R.id.textView5)
         resultText.setTextColor(Color.RED)
         resultText.textSize = 22F
-        resultText.text = "Your ghost won!! Better luck next time!"
+        resultText.text = getString(R.string.yousghostwonbetterluck)
         lost = true
     }
     private fun saveLocationObject(location:Location){

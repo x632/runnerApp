@@ -42,5 +42,13 @@
     <string name="before_starting_the_race_against_your_ghost_make_sure_you_have_the_same_starting_position">Before starting the race against your ghost make sure you have the same starting position!</string>
     <string name="by">by</string>
     <string name="voice_updates">"Voice notifications           "</string>
+    <string name="trailing">trailing</string>
+    <string name="kmh">\" km/h\"</string>
+    <string name="meters">\" meters\"</string>
+    <string name="ahead">ahead</string>
+    <string name="yousghostwonbetterluck">Your ghost won!! Better luck next time!</string>
+    <string name="running">Running..</string>
+    <string name="kmh2">\" km/h\"</string>
+    <string name="running2">Running..</string>
 
 </resources>
