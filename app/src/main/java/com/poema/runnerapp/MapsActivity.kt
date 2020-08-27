@@ -1,9 +1,7 @@
 package com.poema.runnerapp
 
 import android.app.Activity
-import android.Manifest
 import android.app.AlertDialog
-import android.content.DialogInterface
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
@@ -69,7 +67,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     private var zoomUpdate = true
     private var myLocationsList = mutableListOf<Location>()
     private var avgSpeed = 0.0
-    private var statAvgSpeed = ""
     private var lastLoc = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -255,7 +252,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     ) {
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                println("Perfekt tack för tillåtelsen!")
                 this.recreate()
             }else {
                 showAlert()
@@ -263,28 +259,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         }
     }
     private fun showAlert(){
-        // when button is clicked, show the alert
-            // build alert dialog
             val dialogBuilder = AlertDialog.Builder(this)
-
-            // set message of alert dialog
-            dialogBuilder.setMessage("RunnerApp needs to use your location data in order to save your tracks. The tracks are only stored locally on your phone. No one but you have access. Do you want to close this application?")
-                // if the dialog is cancelable
+            dialogBuilder.setMessage("RunnerApp needs to use your location data in order to save your tracks. The tracks are only stored locally on your phone. Do you want to close this application?")
                 .setCancelable(false)
-                // positive button text and action
-                .setPositiveButton("Close", DialogInterface.OnClickListener {
-                        dialog, id -> finishAffinity()
-                })
-                // negative button text and action
-                .setNegativeButton("Cancel", DialogInterface.OnClickListener {
-                        dialog, id -> recreate()
-                })
-
-            // create dialog box
+                .setPositiveButton("Close") { dialog, id -> finishAffinity()
+                }
+                .setNegativeButton("Cancel") { dialog, id -> recreate()
+                }
             val alert = dialogBuilder.create()
-            // set title for alert dialog box
             alert.setTitle("Close the app")
-            // show alert dialog
             alert.show()
     }
 
@@ -332,7 +315,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
             if (location != null) {
                 lastLocation = location
                 val currentLatLng = LatLng(location.latitude, location.longitude)
-                println("!!! FirstLocation: $currentLatLng")
                 map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 16f))
             }
         }
@@ -347,7 +329,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         myLocationsList.add(location)
         val speed = location.speed
         val speedText = findViewById<TextView>(R.id.speedvalue)
-        val temp2 = String.format("%.1f", (speed*3600)*.001) + getString(R.string.kmh2)
+        val temp2 = String.format("%.1f", (speed*3600)*.001) + " " + getString(R.string.kmh2)
         speedText.text = temp2
         index++
 
@@ -361,7 +343,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         val tvSpeedValue = findViewById<TextView>(R.id.tvAvgSpeedValue)
         val avgSpeed2 = ((avgSpeed * 3600) * .001)
             if (myLocationsList.size>1) {
-                val temp = String.format("%.1f", avgSpeed2) + getString(R.string.kmh)
+                val temp = String.format("%.1f", avgSpeed2) + " " + getString(R.string.kmh)
             tvSpeedValue.text = temp
         }
             //statAvgSpeed = String.format("%.1f", avgSpeed)
@@ -391,7 +373,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         }
 
         val distV = findViewById<TextView>(R.id.distancevalue)
-        val temp = String.format("%.0f", totalDistance) + getString(R.string.meters)
+        val temp = String.format("%.0f", totalDistance) + " " + getString(R.string.meters)
         distV.text = temp
         if (zoomUpdate) {
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 16f))

@@ -11,6 +11,9 @@ interface LocationDao {
     fun insert(track: Track) : Long
 
     @Insert
+    fun insert(attemptObject: AttemptObject) : Long
+
+    @Insert
     fun insert(locationObject : LocationObject): Long
 
     @Delete
@@ -18,6 +21,9 @@ interface LocationDao {
 
     @Delete
     fun delete(locationObject: LocationObject)
+
+    @Delete
+    fun delete(attemptObject: AttemptObject)
 
     @Query("SELECT * FROM track ORDER BY trackId DESC")
     fun getAllTracksInOrder() : List<Track>
@@ -42,4 +48,10 @@ interface LocationDao {
 
     @Query("UPDATE Track SET timestamp = :timestamp WHERE trackID = :uid")
     fun updateTrackTimestamp(uid: Long, timestamp: String )
+
+    @Query("SELECT * FROM AttemptObject WHERE aoTrackId LIKE :trackNumber ORDER BY aoId ASC")
+    fun findAttemptObjectsByTrackId(trackNumber: Long) : List<AttemptObject>
+
+    @Query("UPDATE AttemptObject SET aoTrackId = :trackId WHERE aoTrackId = :oldTrackId")
+    fun updateAttObjTrackId(trackId: Long, oldTrackId: Long )
 }

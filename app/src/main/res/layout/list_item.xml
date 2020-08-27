@@ -25,9 +25,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="5dp"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="10dp"
                 android:text="TextView"
-                android:textColor="@color/colorBTextGreen"
+                android:textColor="@color/colorTVwhite"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -36,7 +36,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="5dp"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="16dp"
                 android:text="TextView"
                 android:textColor="@color/colorBTextGreen"
                 app:layout_constraintStart_toStartOf="parent"
@@ -47,7 +47,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="5dp"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="5dp"
                 android:text="TextView"
                 android:textColor="@color/colorBTextGreen"
                 app:layout_constraintStart_toStartOf="parent"
@@ -63,14 +63,16 @@
 
             <ImageButton
                 android:id="@+id/chooseImgBtn"
-                android:layout_width="134dp"
-                android:layout_height="89dp"
-                android:layout_marginEnd="5dp"
+                style="@android:style/Widget.DeviceDefault.ImageButton"
+                android:layout_width="122dp"
+                android:layout_height="83dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="2dp"
+                android:adjustViewBounds="false"
                 android:alpha="1"
-                android:backgroundTint="#422828"
+                android:background="@drawable/stopwatch"
                 android:cropToPadding="false"
                 android:scaleType="fitXY"
-                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/deleteImage"
                 app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/stopwatch" />
@@ -80,13 +82,24 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="5dp"
-                android:layout_marginTop="2dp"
-                android:layout_marginBottom="2dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="10dp"
                 android:text="TextView"
                 android:textColor="@color/colorBTextGreen"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/textTime" />
+
+            <ImageButton
+                android:id="@+id/statsImgButton"
+                android:layout_width="124dp"
+                android:layout_height="28dp"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="2dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="@+id/chooseImgBtn"
+                app:layout_constraintTop_toBottomOf="@+id/chooseImgBtn"
+                app:srcCompat="@drawable/stats" />
 
 
         </androidx.constraintlayout.widget.ConstraintLayout>

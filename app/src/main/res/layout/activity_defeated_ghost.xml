@@ -76,10 +76,10 @@
 
     <Button
         android:id="@+id/save"
-        android:layout_width="155dp"
+        android:layout_width="140dp"
         android:layout_height="60dp"
         android:layout_marginTop="15dp"
-        android:layout_marginEnd="28dp"
+        android:layout_marginEnd="26dp"
         android:background="@layout/roundedcorners"
         android:text="@string/Update"
         android:textColor="@color/colorBTextGreen"
@@ -89,9 +89,9 @@
 
     <Button
         android:id="@+id/cancelBtn"
-        android:layout_width="155dp"
+        android:layout_width="140dp"
         android:layout_height="60dp"
-        android:layout_marginStart="28dp"
+        android:layout_marginStart="26dp"
         android:layout_marginTop="15dp"
         android:background="@layout/roundedcorners"
         android:text="@string/cancelbtn"

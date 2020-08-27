@@ -20,28 +20,31 @@ class TracksActivity : AppCompatActivity(), CoroutineScope {
     private lateinit var db : AppDatabase
     override val coroutineContext : CoroutineContext
         get() = Dispatchers.Main + job
-    var mapsUidIndex = -1
-    private var idList = mutableListOf<String>()
-    //lateinit var db: FirebaseFirestore
-    //private lateinit var auth: FirebaseAuth
     lateinit var recyclerView: RecyclerView
     var createdTrack: Boolean = false
     var adapter: MapRecycleAdapter? = null
     var trackId : Long = 0
     var name = ""
     var nam = ""
+    var oldTrackId : Long = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_tracks)
         job = Job()
         db = DatabaseSource.getInstance(applicationContext)
-        val timeUnit = intent.getIntExtra("time2", -1)
-        val name = intent.getStringExtra("name2")
-        val distance = intent.getDoubleExtra("distance2", 0.0)
+        // Dessa tas emot från antingen namingtrackAct eller defeatedghostAct
+        val timeUnit = intent.getIntExtra("time2", -1)              //tiden i sekunder (INT)
+        val name = intent.getStringExtra("name2")                           //namn på banan (String)
+        val distance = intent.getDoubleExtra("distance2", 0.0)  //längden på banan (Double)
         val timestr = makeTimeStr(timeUnit)
-        trackId = intent.getLongExtra("docUi",0)
+        oldTrackId = intent.getLongExtra("oldTrackId",0)
+        trackId = intent.getLongExtra("docUi",0) //trackID (nya banan)
 
+        println("!!!OldTrackId från tracksActivity : $oldTrackId")
+        if (oldTrackId > 0){      // är lika med : kommit från defeatedghostactivity
+            loadAtt()
+        }
         println("namn: $name från Tracksactivity")
         if (timeUnit >= 0) {
             createdTrack = true
@@ -61,12 +64,9 @@ class TracksActivity : AppCompatActivity(), CoroutineScope {
 
             val myDate = getCurrentDateTime()
             val timeStamp = myDate.toString("yyyy-MM-dd HH:mm:ss.SSSSSS")
-            nam = if (name == null){
-                ""
-            } else{
-                name!!
-            }
-            updateTrack(trackId, distance, nam, timestr, timeStamp)
+            nam = name ?: ""
+            val newAttempt = AttemptObject(0,trackId, timeUnit, distance,true,timeStamp)
+            updateTrack(trackId, distance, nam, timestr, timeStamp, newAttempt) //and save attemptObject
         }
 
         if (!createdTrack) {
@@ -74,6 +74,7 @@ class TracksActivity : AppCompatActivity(), CoroutineScope {
                 getData()
         }
     }
+
     private fun getCurrentDateTime(): Date {
         return Calendar.getInstance().time
     }
@@ -108,13 +109,15 @@ class TracksActivity : AppCompatActivity(), CoroutineScope {
         async(Dispatchers.IO) {
             db.locationDao().getAllTracksInOrder()
         }
-    fun updateTrack(trackNumber : Long, distance : Double, name : String, time : String, timeStamp: String) {
+
+    private fun updateTrack(trackNumber : Long, distance : Double, name : String, time : String, timeStamp: String, newAttempt : AttemptObject) {
         async(Dispatchers.IO) {
             db.locationDao().updateTrackLength(trackNumber, distance)
             db.locationDao().updateTrackTime(trackNumber, time)
             db.locationDao().updateTrackName(trackNumber, name)
             db.locationDao().updateTrackTimestamp(trackNumber, timeStamp)
-            println("!!!Trackfields updated!!")
+            db.locationDao().insert(newAttempt)
+            println("!!!Trackfields updated and new attempt saved!!")
             getData()
         }
     }
@@ -169,6 +172,34 @@ class TracksActivity : AppCompatActivity(), CoroutineScope {
 
             println("!!!Track located!!")
             deleteTrack(track)
+        }
+    }
+    private fun loadAtt(){
+        println("!!! från loadAtt funktionen före loopen Tracks")
+        val selAttObj  = loadAttemptObjectsByTrack(oldTrackId)
+        launch {
+            selAttObj.await().forEach {
+                println("!!! $it")
+                val oldId = it.aoTrackId
+                updateAttObject(trackId,oldId)
+                println("!!!AoTrackId for ${it.aoId} updated to trackId $trackId!!!")
+            }
+            switchToMain2()
+        }
+    }
+    fun loadAttemptObjectsByTrack(aoOldTrackId: Long) : Deferred<List<AttemptObject>> =
+        async(Dispatchers.IO) {
+            db.locationDao().findAttemptObjectsByTrackId(aoOldTrackId)
+        }
+    private suspend fun switchToMain2(){
+        withContext(Dispatchers.Main){
+            println("!!!Varit i c handlern efter att ha uppdaterat aotrackId..forts sedan förhoppningsvis onCreate ")
+        }
+    }
+    private fun updateAttObject(trackId: Long, oldId: Long) {
+        async(Dispatchers.IO) {
+            db.locationDao().updateAttObjTrackId(trackId,oldId)
+            println("!!! AObjectupdated")
         }
     }
 }

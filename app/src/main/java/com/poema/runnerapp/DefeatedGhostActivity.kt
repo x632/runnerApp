@@ -37,11 +37,9 @@ class DefeatedGhostActivity : AppCompatActivity(), CoroutineScope {
         distance = intent.getDoubleExtra("Distance", 0.0)
         docUid = intent.getLongExtra("docUid",0)
         position = intent.getIntExtra("posit",0)
-        val size = ObjectDataManager.locationObjects.size
         a = Datamanager.tracks[position]
         oldTrackId = (a.trackId)
 
-        println("!!! Positionen ${Datamanager.tracks[position]} och index är $size och id:t $oldTrackId")
 
 
         val resultTimeText = makeTimeStr(timeUnit)
@@ -49,7 +47,8 @@ class DefeatedGhostActivity : AppCompatActivity(), CoroutineScope {
         val cancelButton = findViewById<Button>(R.id.cancelBtn)
         val timeText = findViewById<TextView>(R.id.timeValue)
         val lengthText = findViewById<TextView>(R.id.textView4)
-        lengthText.text = String.format("%.0f", distance) + " meters"
+        val temp =String.format("%.0f", distance) + " meters"
+        lengthText.text = temp
         val trackNa = findViewById<TextView>(R.id.tvTrackName)
         trackNa.text = Datamanager.tracks[position].name
         timeText.text = resultTimeText
@@ -58,22 +57,26 @@ class DefeatedGhostActivity : AppCompatActivity(), CoroutineScope {
 
         //Savebutton
         saveButton.setOnClickListener {
+            //här bör alla statistikobjekt överföras till nya tracken som inte finns än....
             eraseLocationObjects(oldTrackId) //raderar gamla banan och dess locations gär sedan vidare till tracks
+
         }
         // Cancelbutton
         cancelButton.setOnClickListener {
             cancelled = true
             eraseLocationObjects(docUid)
+            //ska man skita i att spara statistik om man canclar trots att man vunnit - jag tror det.
         }
 
     }
-
+  // dessa skickas till tracksActivity efter att den gamla banan raderats
     private fun moveIntoFunc(){
         val intent = Intent(this, TracksActivity::class.java)
         intent.putExtra("name2", trackName)
         intent.putExtra("time2", timeUnit)
         intent.putExtra("distance2", distance)
         intent.putExtra("docUi", docUid)
+        intent.putExtra("oldTrackId", oldTrackId)
         startActivity(intent)
     }
 
@@ -122,13 +125,13 @@ class DefeatedGhostActivity : AppCompatActivity(), CoroutineScope {
             track = db.locationDao().findTrackById(id)
             println("!!!Track located!!")
             db.locationDao().delete(track)
-            println("!!!Track deleted!!")
+            println("!!!Track deleted (från defeatedGhost)!!")
             switchToMain()
         }
     }
     fun deleteLocationObject(locationObject: LocationObject) {
         async(Dispatchers.IO) {   db.locationDao().delete(locationObject)
-            println("!!!LocationObject deleted!!")
+            println("!!!LocationObject deleted!! (från defeated ghost)")
         }
     }
     //laddar ner LocObj för tracken i ordning(!!)

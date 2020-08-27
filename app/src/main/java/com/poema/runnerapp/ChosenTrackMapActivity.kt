@@ -80,6 +80,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private var trailing: Boolean = true
     private var voiceUpdates: Boolean = true
     private var pressedEarly = false
+    private var qualifiedAsAttempt = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -193,15 +194,23 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         onPause()
         val ghostGoalDistance = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].accDistance
 
-            val a = 0.1 * ghostGoalDistance     //procentsatsen för när användaren ska anses vara tillräckligt nära mål mätt i ackumulerad distans
+        val a = 0.1 * ghostGoalDistance     //procentsatsen för när användaren ska anses vara tillräckligt nära mål mätt i ackumulerad distans
             // för att tiden ska kunna räknas som ev rekord. Dessutom ska användaren befinna sig högst 20m från slutpunkten på ghostbanan (målet)
-            val latestLocation = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].locLat
-            val latestLocation2 = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].locLng
-            val endLocation = Location("Punkt")
+        val latestLocation = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].locLat
+        val latestLocation2 = NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].locLng
+        val endLocation = Location("Punkt")
 
                     endLocation.latitude = latestLocation
                     endLocation.longitude = latestLocation2
             println("!!!timunit: $timeUnit markerlist size ${markerList.size}")
+        if (lost){
+            val b = 0.4 * ghostGoalDistance //60% av ghostens sträcka måste ha tillryggalagts för att det ska räknas som ett försök i statistiken - trots förlust
+            if (timeUnit > NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].time && totalDistance > (ghostGoalDistance - b)){
+                          qualifiedAsAttempt = true
+                println("!!! QualifiedAttempt har blivit true!!")
+                }
+
+        }
             if (timeUnit < NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].time && totalDistance > (ghostGoalDistance - a) && location.distanceTo(endLocation) < 20.0) {
                 // vad ska hända när man vunnit
 
@@ -397,7 +406,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         }
         //jämför ghostdistansen och den nuvarande distansen, skriver skillnaden på skärmen
 
-        if (timeUnit < markerList.size) {
+        if (timeUnit < NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].time) {
             val aot = findViewById<TextView>(R.id.aot)
             val aotValue = findViewById<TextView>(R.id.aotValue)
             val ghostAccDistance = NewDataManager.newLocationObjects[timeUnit].accDistance
@@ -412,7 +421,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 aotValue.setTextColor(Color.RED)
                 aotValue.text = str
                 val differInt= str.substring(0,str.length-1).toInt()
-                var speakString : String
+                val speakString : String
                 if (!trailing && index > 0) {
                     when (differInt) {
                         1 -> {
@@ -438,7 +447,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 val str = String.format("%.0f", (differ)) + "m"
                 aotValue.text = str
                 val differInt = str.substring(0,str.length-1).toInt()
-                var speakString = "Start"
+                var speakString : String
                 if (trailing && index > 1) {
                     when (differInt) {
                         1 -> {
@@ -635,9 +644,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     }
 
     private fun eraseIfLostToGhost(){
-        println("!!! Varit i erase if lost to ghost")
         eraseLocationObjects(newTrackId)
-
     }
     fun eraseLocationObjects(id : Long) {
 
@@ -671,7 +678,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private suspend fun switchToMain(){
         withContext(Dispatchers.Main){
             if (lost || pressedEarly){onPause()
-                println("!!! Varit i switchToMain. Detta bör vara sista texten som syns!!")
+                println("!!! completionhandler switchToMain. Detta bör vara sista texten som syns!!")
                 goHome()}
             else{
                 startingFunction()
@@ -689,15 +696,30 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     }
 
     private fun goHome(){
-        val a: String = if (lost) {
-                "Your record attempt has been deleted"
+       if (lost && qualifiedAsAttempt) {
+           saveLosingRecordAttempt()
             } else{
-                "You seem to have pressed 'stop' prematurely. Your record attempt has been deleted."
+                val a = "You seem to have pressed 'stop' prematurely. Your record attempt has been deleted. No stats have been saved."
+           makeToast(a)
             }
-            Toast.makeText(
-                applicationContext, a,
-                Toast.LENGTH_LONG).show(); goToStartPage()
+    }
+
+    private fun saveLosingRecordAttempt(){
+            val myDate = getCurrentDateTime()
+            val dateInString = myDate.toString("yyyy-MM-dd HH:mm:ss.SSSSSS")
+            val newAttempt = AttemptObject(0,oldTrackId,timeUnit, totalDistance,false, dateInString)
+            async(Dispatchers.IO) {
+            val newAttemptId = db.locationDao().insert(newAttempt)
+            println("!!!AttemptObject with ID $newAttemptId saved!!")
+            completionHandler()
         }
+     }
+    private fun makeToast(a:String){
+        Toast.makeText(
+            applicationContext, a,
+            Toast.LENGTH_LONG).show(); goToStartPage()
+        goToStartPage()
+    }
 
     private fun goToStartPage(){
         val intent = Intent(this, MainActivity::class.java)
@@ -710,6 +732,13 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             tts!!.shutdown()
         }
         super.onDestroy()
+    }
+    private suspend fun completionHandler(){
+        withContext(Dispatchers.Main){
+            val a = "Statistics have been saved. Your record attempt has been deleted"
+            println("!!! completionhandler switchToMain. Alternativt: Detta bör vara sista texten som syns!!")
+           makeToast(a)
+        }
     }
 
     private fun roomSaveTrack(track: Track){

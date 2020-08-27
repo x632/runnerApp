@@ -22,8 +22,6 @@ class MapRecycleAdapter (private val context : Context, private val tracks: List
     override val coroutineContext : CoroutineContext
         get() = Dispatchers.Main + job
     private lateinit var db : AppDatabase
-    private var mapObjectUidIndex = -1
-    private var idList = mutableListOf<String>()
     private val layoutInflater = LayoutInflater.from(context)
     var loggedIn = false
     var pos : Int = 0
@@ -31,7 +29,7 @@ class MapRecycleAdapter (private val context : Context, private val tracks: List
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         job = Job()
         db = DatabaseSource.getInstance(context)
-            loggedIn = true
+        loggedIn = true
 
         val itemView = layoutInflater.inflate(R.layout.list_item, parent, false )
         return ViewHolder(itemView)
@@ -42,10 +40,13 @@ class MapRecycleAdapter (private val context : Context, private val tracks: List
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val track = tracks[position]
         holder.textViewName.text = track.name
-        holder.textViewLength.text = "Length: " + String.format("%.0f", track.length)+" meters"
-        holder.textViewTime.text = "Best time: " + track.time
+        val temp = "Length: " + String.format("%.0f", track.length)+" meters"
+        holder.textViewLength.text = temp
+        val temp2 ="Best time: " + track.time
+        holder.textViewTime.text = temp2
         val b = track.timestamp
-        holder.textViewDate.text = "Set: " + b.substring(0,b.length-10)
+        val temp3 = "Set: " + b.substring(0,b.length-10)
+        holder.textViewDate.text = temp3
         holder.mapPosition = position
     }
     // startar raderingsprocessen här - tar emot positionen som det tryckts på och tar fram roomid:t på den banan
@@ -76,12 +77,13 @@ class MapRecycleAdapter (private val context : Context, private val tracks: List
             track = db.locationDao().findTrackById(id)
             db.locationDao().delete(track)
             println("!!!Track with ID: ${track.trackId} located and deleted!!")
-            notifyOnMain()
+            eraseAttemptObjects(id)
         }
     }
     suspend fun notifyOnMain(){
         withContext(Dispatchers.Main){
             Datamanager.tracks.removeAt(pos)
+            println("Detta är slutpositionen!")
             notifyDataSetChanged()
         }
     }
@@ -90,22 +92,40 @@ class MapRecycleAdapter (private val context : Context, private val tracks: List
             db.locationDao().findLocObjectsByTrackId(locObjTrackId)
         }
     fun deleteLocationObject(locationObject: LocationObject) {
-        async(Dispatchers.IO) {   db.locationDao().delete(locationObject)
+        async(Dispatchers.IO) {
+            db.locationDao().delete(locationObject)
             println("!!!LocationObject with id: ${locationObject.locObjId} and track ID: ${locationObject.locObjTrackId} deleted!")
         }
     }
-
-
+    fun eraseAttemptObjects(id : Long) {
+        val allAttObj = loadAttemptObjectsByTrack(id)
+        launch {
+            allAttObj.await().forEach {
+                deleteAttemptObject(it)
+            }
+            notifyOnMain()
+        }
+    }
+    fun loadAttemptObjectsByTrack(attObjTrackId: Long) : Deferred<List<AttemptObject>> =
+        async(Dispatchers.IO) {
+            db.locationDao().findAttemptObjectsByTrackId(attObjTrackId)
+        }
+    fun deleteAttemptObject(attemptObject: AttemptObject) {
+        async(Dispatchers.IO) {
+            db.locationDao().delete(attemptObject)
+            println("!!!AttemptObject with id: ${attemptObject.aoId} and track ID: ${attemptObject.aoTrackId} deleted!")
+        }
+    }
 
     inner class ViewHolder(itemView : View) : RecyclerView.ViewHolder(itemView) {
 
         val textViewName: TextView = itemView.findViewById<TextView>(R.id.textName)
         val textViewLength: TextView = itemView.findViewById<TextView>(R.id.textLength)
         val textViewTime: TextView = itemView.findViewById<TextView>(R.id.textTime)
-       // val textViewId = itemView.findViewById<TextView>(R.id.textId)
         val textViewDate: TextView = itemView.findViewById<TextView>(R.id.textVdate)
-        val delButton: ImageView =  itemView.findViewById<ImageView>(R.id.deleteImage)
+        private val delButton: ImageView =  itemView.findViewById<ImageView>(R.id.deleteImage)
         private val chooseTrackBtn: ImageButton = itemView.findViewById<ImageButton>(R.id.chooseImgBtn)
+        private val chooseStatsBtn: ImageButton = itemView.findViewById<ImageButton>(R.id.statsImgButton)
         var mapPosition = 0
 
         init{
@@ -114,15 +134,15 @@ class MapRecycleAdapter (private val context : Context, private val tracks: List
                 val dialogBuilder = AlertDialog.Builder(context)
 
                 dialogBuilder.setTitle("Delete Track")
-                    .setMessage("Do you want to delete this track?")
+                    .setMessage("Do you want to delete this track and all of its statistics?")
                     //.setCancelable(false)
                     .setPositiveButton("Delete", DialogInterface.OnClickListener {
-                            dialog, id ->
+                            _, _ ->
                         removeTrack(mapPosition)
                         Snackbar.make(view, "Track deleted", Snackbar.LENGTH_SHORT).show()
                     })
                     .setNegativeButton("Cancel", DialogInterface.OnClickListener {
-                            dialog, id -> dialog.cancel()
+                            dialog, _ -> dialog.cancel()
                     })
 
                 val alert = dialogBuilder.create()
@@ -132,6 +152,11 @@ class MapRecycleAdapter (private val context : Context, private val tracks: List
             chooseTrackBtn.setOnClickListener{
                 val intent = Intent(context, ChosenTrackMapActivity::class.java)
                 intent.putExtra("position", mapPosition)
+                context.startActivity(intent)
+            }
+            chooseStatsBtn.setOnClickListener{
+                val intent = Intent(context, StatsActivity::class.java)
+                intent.putExtra("positi", mapPosition)
                 context.startActivity(intent)
             }
         }
