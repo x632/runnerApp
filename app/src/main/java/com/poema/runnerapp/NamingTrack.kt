@@ -34,7 +34,8 @@ class NamingTrack : AppCompatActivity() , CoroutineScope {
         val cancelButton = findViewById<Button>(R.id.cancelBtn)
         val timeText = findViewById<TextView>(R.id.timeValue)
         val lengthText = findViewById<TextView>(R.id.textView4)
-        lengthText.text = String.format("%.0f", distance) + " meters"
+        val temp = String.format("%.0f", distance) + " meters"
+        lengthText.text = temp
         timeText.text = resultTimeText
 
         saveButton.setOnClickListener {
@@ -53,9 +54,14 @@ class NamingTrack : AppCompatActivity() , CoroutineScope {
         }
     }
 
-    fun getName(): String {
+    private fun getName(): String {
         val answerText = findViewById<EditText>(R.id.trackName)
-        val trackName = answerText.text.toString()
+        val trackName: String
+        trackName = if (answerText.text.toString() == "") {
+            "Unnamed"
+        } else{
+            answerText.text.toString()
+        }
         return trackName
     }
 

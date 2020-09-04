@@ -1,5 +1,6 @@
 package com.poema.runnerapp
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.content.IntentSender
@@ -8,6 +9,7 @@ import android.graphics.Color
 import android.location.Location
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.WindowManager
@@ -82,6 +84,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private var pressedEarly = false
     private var qualifiedAsAttempt = false
 
+    @SuppressLint("UseSwitchCompatOrMaterialCode")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_choosen_track_map2)
@@ -203,14 +206,17 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                     endLocation.latitude = latestLocation
                     endLocation.longitude = latestLocation2
             println("!!!timunit: $timeUnit markerlist size ${markerList.size}")
+
+
         if (lost){
-            val b = 0.4 * ghostGoalDistance //60% av ghostens sträcka måste ha tillryggalagts för att det ska räknas som ett försök i statistiken - trots förlust
+            val b = 0.5 * ghostGoalDistance //60% av ghostens sträcka måste ha tillryggalagts för att det ska räknas som ett försök i statistiken - trots förlust
             if (timeUnit > NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].time && totalDistance > (ghostGoalDistance - b)){
                           qualifiedAsAttempt = true
                 println("!!! QualifiedAttempt har blivit true!!")
                 }
 
         }
+        //om man däremot inte har förlorat än när man trycker stop gäller villkoren nedan
             if (timeUnit < NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].time && totalDistance > (ghostGoalDistance - a) && location.distanceTo(endLocation) < 20.0) {
                 // vad ska hända när man vunnit
 
@@ -302,7 +308,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         fusedLocationClient.requestLocationUpdates(
             locationRequest,
             locationCallback,
-            null /* Looper */
+            Looper.getMainLooper()
         )
     }
 
@@ -436,6 +442,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                             speakString = "You are trailing by " + str.substring(0,str.length-1) + " meters"
                         }
                     }
+
                     if (voiceUpdates){speakOut(speakString)}
                 }
                 trailing = true
@@ -447,18 +454,17 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 val str = String.format("%.0f", (differ)) + "m"
                 aotValue.text = str
                 val differInt = str.substring(0,str.length-1).toInt()
-                var speakString : String
+                val speakString : String
                 if (trailing && index > 1) {
-                    when (differInt) {
+                    speakString = when (differInt) {
                         1 -> {
-                            speakString = "You are ahead by " + str.substring(0,str.length-1) + " meter"
+                            "You are ahead by " + str.substring(0,str.length-1) + " meter"
                         }
                         0 -> {
-                            speakString =
-                                "You are ahead by less than one meter"
+                            "You are ahead by less than one meter"
                         }
                         else -> {
-                            speakString = "You are ahead by " + str.substring(0,str.length-1) + " meters"
+                            "You are ahead by " + str.substring(0,str.length-1) + " meters"
                         }
                     }
                     if (voiceUpdates){speakOut(speakString)}
@@ -471,6 +477,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
 
         //fyller på lista med inkommande locationspunkter och ritar en polyline
         val currentLatLng = LatLng(lastLocation.latitude, lastLocation.longitude)
+
         myLocLatLngList.add(currentLatLng)
 
         if (myLocLatLngList.size > 1) {
@@ -507,7 +514,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private fun saveLocationObject(location:Location){
         val lat = location.latitude
         val lng = location.longitude
-        //skapar NYA locationobjects trackID ??
         val a = LocationObject(0, newTrackId,totalDistance, lat,lng, timeUnit)
         saveLocationObj(a)
     }
@@ -691,8 +697,10 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             println("!!!LocationObject with time ${locationObject.time} and trackID ${locationObject.locObjTrackId} deleted!!")
         }
     }
-    private fun speakOut(text:String) {
-        tts!!.speak(text, TextToSpeech.QUEUE_FLUSH, null,"")
+    private  fun speakOut(text:String) {
+        async(Dispatchers.IO) {
+            return@async tts!!.speak(text, TextToSpeech.QUEUE_FLUSH, null,"")
+        }
     }
 
     private fun goHome(){
