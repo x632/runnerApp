@@ -28,7 +28,6 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import kotlinx.coroutines.*
-import java.lang.Runnable
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.concurrent.timer
@@ -52,8 +51,8 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
         private const val REQUEST_CHECK_SETTINGS = 2
     }
-    var downloadedLocObjects = mutableListOf<LocationObject>()
-    var myLocLatLngList = mutableListOf<LatLng>()
+    private var downloadedLocObjects = mutableListOf<LocationObject>()
+    private var myLocLatLngList = mutableListOf<LatLng>()
     private lateinit var map: GoogleMap
     private var timerStarted = false
     private var timerOn: Timer? = null
@@ -83,6 +82,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private var voiceUpdates: Boolean = true
     private var pressedEarly = false
     private var qualifiedAsAttempt = false
+
 
     @SuppressLint("UseSwitchCompatOrMaterialCode")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -134,21 +134,21 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         val header = findViewById<TextView>(R.id.header)
         header.text = trackName
 
-        //fixar Zoom switchknappen
+        // Zoom switchknappen
         val switchBtn = findViewById<Switch>(R.id.switch1)
         switchBtn.setOnCheckedChangeListener{_, isChecked ->
             zoomUpdate = isChecked
         }
-        // fixar voiceupdates knappen
+        // voiceupdates knappen
         val switchBtn2 = findViewById<Switch>(R.id.switch2)
         switchBtn2.setOnCheckedChangeListener{_, isChecked ->
             voiceUpdates = isChecked
         }
 
-        //fixar stopknappen
+        //stopknappen
         val stopButton = findViewById<Button>(R.id.stopbtn)
-        stopButton.setOnClickListener {
-            if (timerOn != null && havePressedStop == true) {
+        stopButton.setOnLongClickListener(){
+           if (timerOn != null && havePressedStop == true) {
                 if (ActivityCompat.checkSelfPermission(
                         this,
                         android.Manifest.permission.ACCESS_FINE_LOCATION
@@ -164,10 +164,11 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                     }
                 }
             }
+            true
         }
-        //fixar startknappen
+    //fixar startknappen
         val startButton = findViewById<Button>(R.id.startbtn)
-        startButton.setOnClickListener {
+        startButton.setOnLongClickListener {
             if (timerOn == null && havePressedStart) {
                 havePressedStart = false
                 if (voiceUpdates) speakOut("Start")
@@ -176,6 +177,7 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
                 val a = Track(0, 0.0, "", "", dateInString)
                 roomSaveTrack(a)
             }
+            true
         }
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -212,7 +214,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             val b = 0.5 * ghostGoalDistance //60% av ghostens sträcka måste ha tillryggalagts för att det ska räknas som ett försök i statistiken - trots förlust
             if (timeUnit > NewDataManager.newLocationObjects[NewDataManager.newLocationObjects.size-1].time && totalDistance > (ghostGoalDistance - b)){
                           qualifiedAsAttempt = true
-                println("!!! QualifiedAttempt har blivit true!!")
                 }
 
         }
@@ -383,11 +384,12 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
         map.isMyLocationEnabled = true
         fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
             if (location != null) {
-                lastLocation = location
+              lastLocation = location
                 val currentLatLng = LatLng(location.latitude, location.longitude)
-                map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 16f))
+                adaptMap()
             }
         }
+
     }
     override fun onMarkerClick(p0: Marker?): Boolean {
         return false
@@ -492,13 +494,12 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             for (LatLng in myLocLatLngList) {
                 options.add(LatLng)
             }
-            // ritar ut polylinen
             map.addPolyline(options)
         }
 
         // uppdaterar kameran till nuvarande position
         if (zoomUpdate) {
-            map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 17f))
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f))
         }
         //skapar och sparar LocationObjects till firestore till den tomma map:pen.
         saveLocationObject(location)
@@ -522,7 +523,6 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
             println("!!!LocationsObject with time: ${locationObject.time} and track # ${locationObject.locObjTrackId} saved!!")}
     }
     override fun onBackPressed() {
-        // ser till så man inte kan lämna sidan om timern är på
         if (timerOn == null) {
             val intent = Intent(this, TracksActivity::class.java)
             startActivity(intent)
@@ -759,8 +759,22 @@ class ChosenTrackMapActivity : AppCompatActivity(), OnMapReadyCallback, OnPolyli
     private suspend fun switchToMain2(){
         withContext(Dispatchers.Main){
             drawPolylines()
+            println("!!!Läst in och ritat polyline!")
             makeGhost()
         }
+    }
+    private fun adaptMap() {
+
+        val builder = LatLngBounds.builder()
+        println("!!! storleken är ${ObjectDataManager.locationObjects.size} ")
+        for (locationObject in (ObjectDataManager.locationObjects)) {
+            val lt = locationObject.locLat
+            val lg = locationObject.locLng
+            builder.include(LatLng(lt, lg))
+        }
+        val bounds = builder.build()
+        val cu = CameraUpdateFactory.newLatLngBounds(bounds,60)
+        map.animateCamera(cu)
     }
 }
 

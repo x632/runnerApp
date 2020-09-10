@@ -1,5 +1,6 @@
 package com.poema.runnerapp
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
@@ -69,6 +70,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
     private var avgSpeed = 0.0
     private var lastLoc = false
 
+    @SuppressLint("UseSwitchCompatOrMaterialCode")
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
@@ -89,7 +91,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
         }
         //STOP-Knappen
         val stopButton = findViewById<Button>(R.id.stopButton)
-        stopButton.setOnClickListener {
+        stopButton.setOnLongClickListener() {
 
             if (timerOn != null && havePressedStop) {
                 havePressedStop = false
@@ -108,11 +110,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
                         }
                 }
             }
+            true
         }
 
-
         val startButton = findViewById<Button>(R.id.startbutton)
-        startButton.setOnClickListener {
+        startButton.setOnLongClickListener() {
 
             if (timerOn == null && havePressedStart) {
                 havePressedStart = false
@@ -121,6 +123,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnPolylineClickLis
                 val a = Track(0, 0.0, "", "", dateInString)
                 roomSaveTrack(a)
             }
+            true
         }
 
         locationCallback = object : LocationCallback() {

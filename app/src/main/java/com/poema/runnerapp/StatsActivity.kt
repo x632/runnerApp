@@ -27,6 +27,7 @@ class StatsActivity : AppCompatActivity(), CoroutineScope {
     private var aoTrackId: Long = 0
     private var downloadedAttObjects = mutableListOf<AttemptObject>()
     private var currentBest : String = ""
+    private var totalLength = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,6 +42,7 @@ class StatsActivity : AppCompatActivity(), CoroutineScope {
         val trackLength = trackObject.length
         val time = trackObject.time
         val trackNameTv = findViewById<TextView>(R.id.tvName)
+        var totalLength : Int = 0
         trackNameTv.text = trackName
         getAttemptObjects(position)
 
@@ -92,7 +94,6 @@ class StatsActivity : AppCompatActivity(), CoroutineScope {
         launch {
             allAttObj.await().forEach {
                 downloadedAttObjects.add(it)
-                println("!!! $it")
             }
             switchToMain2()
         }
@@ -117,35 +118,39 @@ class StatsActivity : AppCompatActivity(), CoroutineScope {
     }
 
     private fun getContent(): String {
-        var fied: String = "Attempts made and avg speed: (last 6)\n\n"
+        var fied = "Total number of runs on this track: ${downloadedAttObjects.size}\n\n"
+        fied += "Date and avg speed: (max. last 6)\n"
 
         for ((index, attemptObject) in downloadedAttObjects.withIndex()) {
-
+            val temp3 = attemptObject.aoLength.roundToInt()
+            totalLength += temp3
             if (downloadedAttObjects.size >= 7 && index > (downloadedAttObjects.size-7) || downloadedAttObjects.size < 7) {
                 val temp = attemptObject.aoLength.roundToInt()
+
                 val temp2 = attemptObject.aoTime
                 val result1: Double = temp / temp2.toDouble()
                 val finalResult: Double = (3600 * result1) * 0.001
                 val b: String = attemptObject.aoTimestamp
-                val short = " " + b.substring(0, b.length - 10)
+                val short = "  " + b.substring(0, b.length - 10)
                 fied += ("$short : " + String.format("%.2f", (finalResult)) + " km/h\n")
             }
         }
 
-        fied += "\nTime and length of track: (last 6)\n\n"
+        fied += "\nTime and length of track: (last 6)\n"
         for ((index, attemptObject) in downloadedAttObjects.withIndex()) {
             if (downloadedAttObjects.size >= 7 && index > (downloadedAttObjects.size-7) || downloadedAttObjects.size < 7) {
                 val temp = attemptObject.aoLength.roundToInt()
                 val temp2 = makeTimeStr(attemptObject.aoTime)
                 val b: String = attemptObject.aoTimestamp
-                val short = " " + b.substring(0, b.length - 10)
-                fied += if (temp2 == currentBest){
-                    ("$short: $temp2, $temp m (current)\n")
+                val short = "  " + b.substring(0, b.length - 10)
+                fied += if (temp2 == currentBest) {
+                    ("$short: $temp2, $temp m (curr. best)\n")
                 } else {
                     ("$short: $temp2, $temp m\n")
                 }
             }
         }
+        fied += ("\nTotal length ran on this track (all runs): ${totalLength} m\n\n")
         return fied
     }
     fun makeTimeStr(timeUnit: Int): String {
