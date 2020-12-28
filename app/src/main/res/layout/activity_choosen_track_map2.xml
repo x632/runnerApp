@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorBGp1"
+    tools:context=".ChosenTrackMapActivity">
+
+    <Button
+        android:id="@+id/stopbtn"
+        android:layout_width="150dp"
+        android:layout_height="60dp"
+        android:layout_marginEnd="20dp"
+        android:background="@layout/roundedcorners"
+        android:text="@string/button4"
+        android:textColor="@color/colorBTextRed"
+        android:textSize="20sp"
+        app:layout_constraintBaseline_toBaselineOf="@+id/startbtn"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/aotValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:text="@string/distancevalue"
+        android:textAlignment="center"
+        android:textColor="@color/colorBTextGreen"
+        android:textSize="24sp"
+        app:layout_constraintBaseline_toBaselineOf="@+id/textView8"
+        app:layout_constraintStart_toEndOf="@+id/textView8" />
+
+    <Button
+        android:id="@+id/startbtn"
+        android:layout_width="150dp"
+        android:layout_height="60dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="10dp"
+        android:background="@layout/roundedcorners"
+        android:text="@string/button3"
+        android:textColor="@color/colorBTextGreen"
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView5" />
+
+    <TextView
+        android:id="@+id/timer"
+        android:layout_width="280dp"
+        android:layout_height="60dp"
+        android:text="@string/timervalue"
+        android:textAlignment="center"
+        android:textColor="@color/colorTVwhite"
+        android:textSize="50sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.494"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/startbtn" />
+
+    <TextView
+        android:id="@+id/aheadortrailing"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="60dp"
+        android:layout_marginTop="10dp"
+        android:text="@string/you_are"
+        android:textColor="@color/colorTVwhite"
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/timer" />
+
+    <TextView
+        android:id="@+id/header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="40dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="40dp"
+        android:text="@string/trackname"
+        android:textAlignment="center"
+        android:textColor="@color/colorTVwhite"
+        android:textSize="30sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView5"
+        android:layout_width="327dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="30dp"
+        android:layout_marginEnd="30dp"
+        android:text="@string/before_starting_the_race_against_your_ghost_make_sure_you_have_the_same_starting_position"
+        android:textAlignment="center"
+        android:textColor="@color/colorTVwhite"
+        android:textSize="15sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/header" />
+
+    <TextView
+        android:id="@+id/aot"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:text="@string/aot"
+        android:textColor="@color/colorBTextGreen"
+        android:textSize="24sp"
+        app:layout_constraintBaseline_toBaselineOf="@+id/aheadortrailing"
+        app:layout_constraintStart_toEndOf="@+id/aheadortrailing" />
+
+    <TextView
+        android:id="@+id/textView8"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:text="@string/by"
+        android:textColor="@color/colorTVwhite"
+        android:textSize="20sp"
+        app:layout_constraintBaseline_toBaselineOf="@+id/aot"
+        app:layout_constraintStart_toEndOf="@+id/aot" />
+
+    <fragment
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="10dp"
+        app:layout_constraintBottom_toTopOf="@+id/switch2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView2"
+        tools:context=".ChosenTrackMapActivity" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="60dp"
+        android:text="@string/distance_to_goal"
+        android:textColor="@color/colorTVwhite"
+        android:textSize="20sp"
+        app:layout_constraintBaseline_toBaselineOf="@+id/tvDistanceLeft"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/tvDistanceLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="2dp"
+        android:text="@string/textview"
+        android:textColor="@color/colorBTextGreen"
+        android:textSize="20sp"
+        app:layout_constraintStart_toEndOf="@+id/textView2"
+        app:layout_constraintTop_toBottomOf="@+id/textView8" />
+
+    <TextView
+        android:id="@+id/textView10"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="1dp"
+        android:text="@string/m"
+        android:textColor="@color/colorBTextGreen"
+        android:textSize="20sp"
+        app:layout_constraintBaseline_toBaselineOf="@+id/tvDistanceLeft"
+        app:layout_constraintStart_toEndOf="@+id/tvDistanceLeft" />
+
+    <Switch
+        android:id="@+id/switch1"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:background="@color/colorBGp1"
+        android:checked="true"
+        android:showText="false"
+        android:text="@string/move_map_and_zoom_automatically"
+        android:textColor="@color/colorTVwhite"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/switch2"
+        tools:checked="false" />
+
+    <Switch
+        android:id="@+id/switch2"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:text="@string/voice_updates"
+        android:textColor="@color/colorTVwhite"
+        app:layout_constraintBottom_toTopOf="@+id/switch1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.407"
+        app:layout_constraintStart_toStartOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>
